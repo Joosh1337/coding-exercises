@@ -18,3 +18,9 @@ You must dispatch the packages in the following stacks:
 ### Implementation
 
 Implement the function **`sort(width, height, length, mass)`** (units are centimeters for the dimensions and kilogram for the mass). This function must return a string: the name of the stack where the package should go.
+
+### Instructions
+To run the test file:
+1. Open project in VS Code
+2. Ensure you have `pytest` installed using `pip install pytest`
+3. Right-click the `test_sort.py` and click "Run Tests"
