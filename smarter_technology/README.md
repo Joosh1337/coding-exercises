@@ -21,6 +21,11 @@ Implement the function **`sort(width, height, length, mass)`** (units are centim
 
 ### Instructions
 To run the test file:
-1. Open project in VS Code
-2. Ensure you have `pytest` installed using `pip install pytest`
-3. Right-click the `test_sort.py` and click "Run Tests"
+1. Open the project in VS Code.
+2. Ensure Python is installed on your system. You can download it from [python.org](https://www.python.org/) or use a package manager like `brew` on macOS.
+3. Install `pytest` by running `pip install pytest` in your terminal.
+4. Configure VS Code to use `pytest`:
+   - Open the Command Palette (`Cmd+Shift+P`) and select `Python: Configure Tests`.
+   - Choose `pytest` as the testing framework.
+   - Select `smarter_technology` as the directory containing the requests
+5. Right-click the `test_sort.py` file in VS Code and select "Run Tests".
