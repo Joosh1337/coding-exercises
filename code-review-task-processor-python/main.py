@@ -2,10 +2,11 @@
 import time
 from models import Task, Database, EmailAPI, TaskQueue
 
-
+# Copilot CR: BUG! Potential race condition issue if multiple TaskWorkers run concurrently
 class TaskWorker:
     def __init__(self, queue: TaskQueue, database: Database, email_api: EmailAPI):
         self.queue = queue
+        # CR: :nit: Consider using more descriptive variable names for the database and email_api attributes
         self.d = database
         self.e = email_api
 
@@ -32,8 +33,13 @@ class TaskWorker:
                 else:
                     time.sleep(1)
             except Exception as e:
+                # Copilot CR: If something goes wrong with external services like email or database API,
+                #     the task will be dropped entirely. These errors need to actually be handled
+                # Copilot CR: Exception is printed, but loses stack track and task content. Use `logging`
+                #     with exc_info=True instead
                 print(f"An unexpected error occurred: {e}. Worker will continue.")
 
+    # Copilot CR: We should rename t and dat to more descriptive names
     def _process_task(self, t: Task) -> bool:
         """Processes a single task. Returns True on success, False on failure."""
         dat = t.payload
@@ -46,7 +52,7 @@ class TaskWorker:
         if not email:
             return False  # Email not found
 
-        # CR: Should switch to match-case statement
+        # Copilot CR: Should switch to decorator pattern or task handler registry to make it more extensible
         if t.type == "ANALYZE_CONTENT":
             # CR: :nit: store email.body.lower() in a variable instead of repeatedly calling it
             #     AND/OR make this another match-case statement OR make a tag_keywords dict and loop through it
@@ -80,6 +86,7 @@ class TaskWorker:
 
         elif t.type == "LOG_USER_ACTIVITY":
             # CR: Potential security concern: user_id can be "any" type, so we should parse it to avoid SQL injection
+            # Copilot CR: use `dat.get("user_id")` to prevent the worker crashing when key is missing
             user_id = dat["user_id"]
             query = f"INSERT INTO activity_logs (user_id, action) VALUES ({user_id}, 'processed_email')"
             self.d.execute_raw_query(query)

@@ -113,3 +113,5 @@ class TestTaskWorker(unittest.TestCase):
             self.db.last_query,
             "INSERT INTO activity_logs (user_id, action) VALUES (99, 'processed_email')",
         )
+
+    # CR: Missing negative/non-happy-path tests
