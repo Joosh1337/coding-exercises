@@ -35,6 +35,9 @@ class MockDatabase:
     def update_email(self, email: Email) -> None:
         if email.id in self._emails:
             self._emails[email.id] = email
+        # CR: If the email ID is not one we currently have, what is the intended behavior?
+        #     This currently does nothing in that case
+        #     NOTE: The current code this is in doesn't hit this use case, but it's something to bring up
 
     def execute_raw_query(self, query: str, params: Optional[tuple] = None) -> None:
         self.last_query = query
@@ -87,6 +90,7 @@ class TestTaskWorker(unittest.TestCase):
 
         self.assertTrue(result)
         updated_email = self.db.get_email_by_id(102)
+        # CR: This test doesn't currently check the updated email, allowing the BUG found earlier to go by unnoticed
 
     def test_forward_to_support(self):
         task = Task(id="t3", type="FORWARD_TO_SUPPORT", payload={"email_id": 101})

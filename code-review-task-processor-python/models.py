@@ -8,6 +8,7 @@ class Email:
     id: int
     subject: str
     body: str
+    # CR: Consider making this an enum to avoid misspelled types
     status: str
     tags: Set[str] = field(default_factory=set)
 
@@ -15,6 +16,7 @@ class Email:
 @dataclass
 class Task:
     id: str
+    # CR: Consider making this an enum to avoid misspelled types
     type: str
     payload: Dict[str, Any]
 
