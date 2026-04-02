@@ -1,8 +1,10 @@
 # /main.py
 import time
+import logging
 from models import Task, Database, EmailAPI, TaskQueue
 
-# Copilot CR: BUG! Potential race condition issue if multiple TaskWorkers run concurrently
+logging.basicConfig(level=logging.INFO)
+
 class TaskWorker:
     def __init__(self, queue: TaskQueue, database: Database, email_api: EmailAPI):
         self.queue = queue
@@ -35,9 +37,7 @@ class TaskWorker:
             except Exception as e:
                 # Copilot CR: If something goes wrong with external services like email or database API,
                 #     the task will be dropped entirely. These errors need to actually be handled
-                # Copilot CR: Exception is printed, but loses stack track and task content. Use `logging`
-                #     with exc_info=True instead
-                print(f"An unexpected error occurred: {e}. Worker will continue.")
+                logging.error(f"An unexpected error occurred while processing task {task.id if task else 'unknown'}: {e}", exc_info=True)
 
     # Copilot CR: We should rename t and dat to more descriptive names
     def _process_task(self, t: Task) -> bool:
@@ -64,13 +64,12 @@ class TaskWorker:
                 email.tags.add("POTENTIAL_SPAM")
             # CR: We should only update if we make changes
             self.d.update_email(email)
-            # CR: :nit: Consider making a different print statement if no tags were found for clarity
             print(f"Analyzed email {email.id}, added tags: {email.tags}")
             return True
 
         elif t.type == "MARK_AS_SPAM":
             email.status = "SPAM"
-            # CR: BUG! The email never gets updated after marking it as spam
+            self.d.update_email(email)
             print(f"Email {email.id} marked as SPAM.")
             return True
 
@@ -85,12 +84,13 @@ class TaskWorker:
             return True
 
         elif t.type == "LOG_USER_ACTIVITY":
-            # CR: Potential security concern: user_id can be "any" type, so we should parse it to avoid SQL injection
-            # Copilot CR: use `dat.get("user_id")` to prevent the worker crashing when key is missing
-            user_id = dat["user_id"]
-            query = f"INSERT INTO activity_logs (user_id, action) VALUES ({user_id}, 'processed_email')"
-            self.d.execute_raw_query(query)
-            # CR: :nit: Should we add a print statement here to be consistent?
+            user_id = dat.get("user_id")
+            if not user_id or not isinstance(user_id, str):
+                print(f"Invalid or empty user_id format detected")
+                return False
+            query = "INSERT INTO activity_logs (user_id, action) VALUES (?, ?)"
+            self.d.execute_raw_query(query, (user_id, "processed_email"))
+            print(f"Logged activity for user {user_id}.")
             return True
 
         else:

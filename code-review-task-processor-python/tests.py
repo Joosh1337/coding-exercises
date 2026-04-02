@@ -33,11 +33,7 @@ class MockDatabase:
         return self._emails.get(email_id)
 
     def update_email(self, email: Email) -> None:
-        if email.id in self._emails:
-            self._emails[email.id] = email
-        # CR: If the email ID is not one we currently have, what is the intended behavior?
-        #     This currently does nothing in that case
-        #     NOTE: The current code this is in doesn't hit this use case, but it's something to bring up
+        self._emails[email.id] = email
 
     def execute_raw_query(self, query: str, params: Optional[tuple] = None) -> None:
         self.last_query = query
@@ -60,6 +56,8 @@ class MockTaskQueue:
     def add_task(self, task: Task):
         self.tasks.append(task)
 
+    # Copilot CR: BUG! Potential race condition issue if multiple TaskWorkers run concurrently
+    #     Recommend a lock, queue.Queue, or wrap .popleft() in a try/catch
     def get_task(self) -> Optional[Task]:
         return self.tasks.popleft() if self.tasks else None
 
@@ -90,7 +88,7 @@ class TestTaskWorker(unittest.TestCase):
 
         self.assertTrue(result)
         updated_email = self.db.get_email_by_id(102)
-        # CR: This test doesn't currently check the updated email, allowing the BUG found earlier to go by unnoticed
+        self.assertEqual(updated_email.status, "SPAM")
 
     def test_forward_to_support(self):
         task = Task(id="t3", type="FORWARD_TO_SUPPORT", payload={"email_id": 101})
@@ -103,15 +101,81 @@ class TestTaskWorker(unittest.TestCase):
 
     def test_log_user_activity(self):
         task = Task(
-            id="t4", type="LOG_USER_ACTIVITY", payload={"email_id": 101, "user_id": 99}
+            id="t4", type="LOG_USER_ACTIVITY", payload={"email_id": 101, "user_id": "user_hash_123"}
         )
 
         result = self.worker._process_task(task)
 
         self.assertTrue(result)
-        self.assertEqual(
-            self.db.last_query,
-            "INSERT INTO activity_logs (user_id, action) VALUES (99, 'processed_email')",
-        )
+        self.assertEqual(self.db.last_query, "INSERT INTO activity_logs (user_id, action) VALUES (?, ?)")
+        self.assertEqual(self.db.last_params, ("user_hash_123", "processed_email"))
 
-    # CR: Missing negative/non-happy-path tests
+    def test_process_task_missing_email_id(self):
+        """Task with missing email_id should return False."""
+        task = Task(id="t5", type="ANALYZE_CONTENT", payload={})
+
+        result = self.worker._process_task(task)
+
+        self.assertFalse(result)
+
+    def test_process_task_email_not_found(self):
+        """Task with non-existent email_id should return False."""
+        task = Task(id="t6", type="ANALYZE_CONTENT", payload={"email_id": 999})
+
+        result = self.worker._process_task(task)
+
+        self.assertFalse(result)
+
+    def test_process_task_unknown_type(self):
+        """Task with unknown type should return False."""
+        task = Task(id="t7", type="UNKNOWN_TYPE", payload={"email_id": 101})
+
+        result = self.worker._process_task(task)
+
+        self.assertFalse(result)
+
+    def test_log_user_activity_missing_user_id(self):
+        """LOG_USER_ACTIVITY without user_id should return False."""
+        task = Task(id="t8", type="LOG_USER_ACTIVITY", payload={"email_id": 101})
+
+        result = self.worker._process_task(task)
+
+        self.assertFalse(result)
+
+    def test_log_user_activity_non_string_user_id(self):
+        """LOG_USER_ACTIVITY with non-string user_id should return False."""
+        task = Task(id="t9", type="LOG_USER_ACTIVITY", payload={"email_id": 101, "user_id": 12345})
+
+        result = self.worker._process_task(task)
+
+        self.assertFalse(result)
+
+    def test_analyze_content_with_multiple_keywords(self):
+        """Email with multiple keywords should receive all relevant tags."""
+        email_103 = Email(
+            id=103,
+            subject="Promotional Invoice",
+            body="Unsubscribe from our promotions. Here's your invoice for payment.",
+            status="INBOX",
+            tags=set(),
+        )
+        self.db._emails[103] = email_103
+        task = Task(id="t12", type="ANALYZE_CONTENT", payload={"email_id": 103})
+
+        result = self.worker._process_task(task)
+
+        self.assertTrue(result)
+        updated_email = self.db.get_email_by_id(103)
+        self.assertIn("PROMOTIONAL", updated_email.tags)
+        self.assertIn("FINANCIAL", updated_email.tags)
+
+    def test_forward_to_support_no_email_update(self):
+        """FORWARD_TO_SUPPORT should not update the email itself."""
+        original_status = self.db.get_email_by_id(101).status
+        task = Task(id="t13", type="FORWARD_TO_SUPPORT", payload={"email_id": 101})
+
+        result = self.worker._process_task(task)
+
+        self.assertTrue(result)
+        # Status should remain unchanged
+        self.assertEqual(self.db.get_email_by_id(101).status, original_status)

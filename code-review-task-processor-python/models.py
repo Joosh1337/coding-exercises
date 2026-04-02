@@ -9,8 +9,6 @@ class Email:
     id: int
     subject: str
     body: str
-    # CR: Consider making this an enum to avoid misspelled types
-    # Copilot CR: Add Literal Types for now, enums long-term
     status: str
     tags: Set[str] = field(default_factory=set)
 
