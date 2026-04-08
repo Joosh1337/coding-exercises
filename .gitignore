@@ -1,2 +1,59 @@
 .coverage
 __pycache__/
+
+# Build artifacts
+bin/
+obj/
+out/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# User-specific files
+*.user
+*.suo
+
+# Logs
+*.log
+
+# ASP.NET generated files
+Generated/
+Generated__*
+*.db
+*.db-shm
+*.db-wal
+
+# Dotnet tools
+.dotnet/
+tools/
+
+# Environment variables
+.env
+.env.*
+
+# Node modules
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local env files
+.env
+.env.*
+!.env.example
+
+# Editor folders
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
