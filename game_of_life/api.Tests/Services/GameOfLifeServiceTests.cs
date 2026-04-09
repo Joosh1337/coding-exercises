@@ -1,0 +1,483 @@
+using Xunit;
+using Moq;
+using FluentAssertions;
+using api.Models;
+using api.Repositories;
+using Api.Services;
+using Api.Exceptions;
+using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
+
+namespace api.Tests.Services;
+
+/// <summary>
+/// Comprehensive test suite for GameOfLifeService.
+/// Tests all public methods including edge cases, error scenarios, and business logic.
+/// </summary>
+public class GameOfLifeServiceTests {
+    private readonly Mock<IBoardRepository> _mockRepository;
+    private readonly GameOfLifeService _service;
+
+    public GameOfLifeServiceTests() {
+        _mockRepository = new Mock<IBoardRepository>();
+        
+        // Create a real configuration with test values - no need to mock
+        var configDict = new Dictionary<string, string?>
+        {
+            { "GameOfLife:MaxIterationsForFinalState", "9999" }
+        };
+        
+        var configBuilder = new ConfigurationBuilder()
+            .AddInMemoryCollection(configDict);
+        var realConfig = configBuilder.Build();
+
+        _service = new GameOfLifeService(_mockRepository.Object, realConfig);
+    }
+
+    #region CreateBoard Tests
+
+    [Fact]
+    public async Task CreateBoard_WithValidInput_CreatesAndPersistsBoardSuccessfully() {
+        // Arrange
+        int width = 5, height = 5;
+        int[][] liveCells = new[] { new[] { 0, 0 }, new[] { 1, 1 }, new[] { 2, 2 } };
+        var expectedId = Guid.NewGuid();
+
+        _mockRepository
+            .Setup(r => r.CreateBoard(It.IsAny<Board>()))
+            .ReturnsAsync((Board board) => {
+                board.Id = expectedId;
+                return board;
+            });
+
+        // Act
+        var result = await _service.CreateBoard(width, height, liveCells);
+
+        // Assert
+        result.Should().Be(expectedId);
+        _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateBoard_WithZeroWidth_ThrowsInvalidBoardStateException() {
+        // Arrange
+        int width = 0, height = 5;
+        int[][] liveCells = Array.Empty<int[]>();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
+            _service.CreateBoard(width, height, liveCells));
+
+        _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateBoard_WithNegativeHeight_ThrowsInvalidBoardStateException() {
+        // Arrange
+        int width = 5, height = -1;
+        int[][] liveCells = Array.Empty<int[]>();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
+            _service.CreateBoard(width, height, liveCells));
+
+        _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateBoard_WithCellOutsideBounds_ThrowsInvalidBoardStateException() {
+        // Arrange
+        int width = 5, height = 5;
+        int[][] liveCells = new[] { new[] { 5, 5 } }; // Outside bounds (0-4)
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
+            _service.CreateBoard(width, height, liveCells));
+
+        _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateBoard_WithNegativeCellCoordinate_ThrowsInvalidBoardStateException() {
+        // Arrange
+        int width = 5, height = 5;
+        int[][] liveCells = new[] { new[] { -1, 2 } };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
+            _service.CreateBoard(width, height, liveCells));
+
+        _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateBoard_WithInvalidCellFormat_ThrowsInvalidBoardStateException() {
+        // Arrange
+        int width = 5, height = 5;
+        int[][] liveCells = new[] { new[] { 1 } }; // Missing Y coordinate
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
+            _service.CreateBoard(width, height, liveCells));
+
+        _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateBoard_WithEmptyLiveCells_CreatesValidBoard() {
+        // Arrange
+        int width = 5, height = 5;
+        int[][] liveCells = Array.Empty<int[]>();
+        var expectedId = Guid.NewGuid();
+
+        _mockRepository
+            .Setup(r => r.CreateBoard(It.IsAny<Board>()))
+            .ReturnsAsync((Board board) => {
+                board.Id = expectedId;
+                return board;
+            });
+
+        // Act
+        var result = await _service.CreateBoard(width, height, liveCells);
+
+        // Assert
+        result.Should().Be(expectedId);
+    }
+
+    #endregion
+
+    #region GetBoardState Tests
+
+    [Fact]
+    public async Task GetBoardState_WithExistingBoard_ReturnsInitialState() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        var board = new Board(5, 5, new List<CellCoordinate> {
+            new CellCoordinate(0, 0),
+            new CellCoordinate(1, 1)
+        });
+        board.Id = boardId;
+
+        _mockRepository
+            .Setup(r => r.GetBoardById(boardId))
+            .ReturnsAsync(board);
+
+        // Act
+        var state = await _service.GetBoardState(boardId);
+
+        // Assert
+        state.Should().NotBeNull();
+        state.Generation.Should().Be(0);
+        state.Width.Should().Be(5);
+        state.Height.Should().Be(5);
+        state.LiveCells.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task GetBoardState_WithNonExistentBoard_ThrowsBoardNotFoundException() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        _mockRepository
+            .Setup(r => r.GetBoardById(boardId))
+            .ReturnsAsync((Board?)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<BoardNotFoundException>(() =>
+            _service.GetBoardState(boardId));
+    }
+
+    #endregion
+
+    #region GetStatesAhead Tests
+
+    [Fact]
+    public async Task GetStatesAhead_WithValidSteps_ComputesCorrectNumberOfGenerations() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        // Create a simple blinker pattern (oscillator)
+        // Vertical: (1,0), (1,1), (1,2)
+        var board = new Board(3, 3, new List<CellCoordinate> {
+            new CellCoordinate(1, 0),
+            new CellCoordinate(1, 1),
+            new CellCoordinate(1, 2)
+        });
+        board.Id = boardId;
+
+        _mockRepository
+            .Setup(r => r.GetBoardById(boardId))
+            .ReturnsAsync(board);
+
+        // Act
+        var state = await _service.GetStatesAhead(boardId, 1);
+
+        // Assert
+        state.Should().NotBeNull();
+        state.Generation.Should().Be(1);
+        // After one step, blinker should be horizontal: (0,1), (1,1), (2,1)
+        state.LiveCells.Should().HaveCount(3);
+    }
+
+    [Fact]
+    public async Task GetStatesAhead_WithMultipleSteps_ComputesAllGenerations() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        var board = new Board(3, 3, new List<CellCoordinate> {
+            new CellCoordinate(1, 0),
+            new CellCoordinate(1, 1),
+            new CellCoordinate(1, 2)
+        });
+        board.Id = boardId;
+
+        _mockRepository
+            .Setup(r => r.GetBoardById(boardId))
+            .ReturnsAsync(board);
+
+        // Act
+        var state = await _service.GetStatesAhead(boardId, 5);
+
+        // Assert
+        state.Should().NotBeNull();
+        state.Generation.Should().Be(5);
+    }
+
+    [Fact]
+    public async Task GetStatesAhead_WithZeroSteps_ThrowsInvalidStepsException() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidStepsException>(() =>
+            _service.GetStatesAhead(boardId, 0));
+
+        _mockRepository.Verify(r => r.GetBoardById(It.IsAny<Guid>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetStatesAhead_WithNegativeSteps_ThrowsInvalidStepsException() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidStepsException>(() =>
+            _service.GetStatesAhead(boardId, -5));
+
+        _mockRepository.Verify(r => r.GetBoardById(It.IsAny<Guid>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetStatesAhead_WithNonExistentBoard_ThrowsBoardNotFoundException() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        _mockRepository
+            .Setup(r => r.GetBoardById(boardId))
+            .ReturnsAsync((Board?)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<BoardNotFoundException>(() =>
+            _service.GetStatesAhead(boardId, 1));
+    }
+
+    [Fact]
+    public async Task GetStatesAhead_WithEmptyBoard_RemainsEmpty() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        var board = new Board(5, 5, new List<CellCoordinate>());
+        board.Id = boardId;
+
+        _mockRepository
+            .Setup(r => r.GetBoardById(boardId))
+            .ReturnsAsync(board);
+
+        // Act
+        var state = await _service.GetStatesAhead(boardId, 1);
+
+        // Assert
+        state.LiveCells.Should().BeEmpty();
+    }
+
+    #endregion
+
+    #region GetFinalState Tests
+
+    [Fact]
+    public async Task GetFinalState_WithStableBoard_ReturnsFinalState() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        // Empty board is immediately stable
+        var board = new Board(5, 5, new List<CellCoordinate>());
+        board.Id = boardId;
+
+        _mockRepository
+            .Setup(r => r.GetBoardById(boardId))
+            .ReturnsAsync(board);
+
+        // Act
+        var finalState = await _service.GetFinalState(boardId);
+
+        // Assert
+        finalState.Should().NotBeNull();
+        finalState.Generation.Should().Be(1); // At least one generation computed
+        finalState.LiveCells.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetFinalState_WithOscillatingBoard_ThrowsNoFinalStateException() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        // Blinker pattern oscillates forever (period 2)
+        var board = new Board(3, 3, new List<CellCoordinate> {
+            new CellCoordinate(1, 0),
+            new CellCoordinate(1, 1),
+            new CellCoordinate(1, 2)
+        });
+        board.Id = boardId;
+
+        _mockRepository
+            .Setup(r => r.GetBoardById(boardId))
+            .ReturnsAsync(board);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<NoFinalStateException>(() =>
+            _service.GetFinalState(boardId));
+    }
+
+    [Fact]
+    public async Task GetFinalState_WithNonExistentBoard_ThrowsBoardNotFoundException() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        _mockRepository
+            .Setup(r => r.GetBoardById(boardId))
+            .ReturnsAsync((Board?)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<BoardNotFoundException>(() =>
+            _service.GetFinalState(boardId));
+    }
+
+    [Fact]
+    public async Task GetFinalState_RespectMaxIterationConfiguration() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        var maxIterations = 10;
+
+        // Create a real configuration with custom max iterations
+        var customConfigDict = new Dictionary<string, string?>
+        {
+            { "GameOfLife:MaxIterationsForFinalState", maxIterations.ToString() }
+        };
+        
+        var customConfigBuilder = new ConfigurationBuilder()
+            .AddInMemoryCollection(customConfigDict);
+        var realCustomConfig = customConfigBuilder.Build();
+        
+        var customConfigMock = new Mock<IConfiguration>();
+        customConfigMock
+            .Setup(c => c.GetSection(It.IsAny<string>()))
+            .Returns((string key) => realCustomConfig.GetSection(key));
+        customConfigMock
+            .Setup(c => c[It.IsAny<string>()])
+            .Returns((string key) => realCustomConfig[key]);
+
+        var service = new GameOfLifeService(_mockRepository.Object, customConfigMock.Object);
+
+        // Blinker that oscillates forever
+        var board = new Board(3, 3, new List<CellCoordinate> {
+            new CellCoordinate(1, 0),
+            new CellCoordinate(1, 1),
+            new CellCoordinate(1, 2)
+        });
+        board.Id = boardId;
+
+        _mockRepository
+            .Setup(r => r.GetBoardById(boardId))
+            .ReturnsAsync(board);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<NoFinalStateException>(() =>
+            service.GetFinalState(boardId));
+
+        exception.Message.Should().Contain(maxIterations.ToString());
+    }
+
+    #endregion
+
+    #region DeleteBoard Tests
+
+    [Fact]
+    public async Task DeleteBoard_WithExistingBoard_DeletesSuccessfully() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        _mockRepository
+            .Setup(r => r.DeleteBoard(boardId))
+            .ReturnsAsync(true);
+
+        // Act
+        var result = await _service.DeleteBoard(boardId);
+
+        // Assert
+        result.Should().BeTrue();
+        _mockRepository.Verify(r => r.DeleteBoard(boardId), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteBoard_WithNonExistentBoard_ReturnsFalse() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        _mockRepository
+            .Setup(r => r.DeleteBoard(boardId))
+            .ReturnsAsync(false);
+
+        // Act
+        var result = await _service.DeleteBoard(boardId);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    #endregion
+
+    #region Integration Scenarios
+
+    [Fact]
+    public async Task CompleteWorkflow_CreateBoardComputeStatesAndDelete() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        var liveCells = new int[][] { new[] { 1, 1 }, new[] { 1, 2 }, new[] { 1, 3 } };
+
+        _mockRepository
+            .Setup(r => r.CreateBoard(It.IsAny<Board>()))
+            .ReturnsAsync((Board board) => {
+                board.Id = boardId;
+                return board;
+            });
+
+        var board = new Board(5, 5, new List<CellCoordinate> {
+            new CellCoordinate(1, 1),
+            new CellCoordinate(1, 2),
+            new CellCoordinate(1, 3)
+        });
+        board.Id = boardId;
+
+        _mockRepository
+            .Setup(r => r.GetBoardById(boardId))
+            .ReturnsAsync(board);
+
+        _mockRepository
+            .Setup(r => r.DeleteBoard(boardId))
+            .ReturnsAsync(true);
+
+        // Act
+        var createdId = await _service.CreateBoard(5, 5, liveCells);
+        var initialState = await _service.GetBoardState(createdId);
+        var nextState = await _service.GetStatesAhead(createdId, 1);
+        var deleteResult = await _service.DeleteBoard(createdId);
+
+        // Assert
+        createdId.Should().Be(boardId);
+        initialState.Generation.Should().Be(0);
+        nextState.Generation.Should().Be(1);
+        deleteResult.Should().BeTrue();
+    }
+
+    #endregion
+}
