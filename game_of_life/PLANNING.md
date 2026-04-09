@@ -78,8 +78,8 @@ public BoardState GenerateNextStep() {
    6. GenerateBoardArray() -> int[,]
 
 # Functions
-1. UploadBoard(int width, int height, int[,] cells)
-2. GetBoard(Guid id)
+1. UploadBoard(int width, int height, int[,] cells) -> Guid
+2. GetBoard(Guid id) -> Board
 
 # Test Cases
 1. Uploading a board works (test with 0 steps)
@@ -100,9 +100,9 @@ public BoardState GenerateNextStep() {
    2. 00 -> 00
       00    00
 9. Oscillator cycles - covers rules 1 & 4
-   1. 010    101    010
-      010 -> 101 -> 010
-      010    101    010
+   1. 010    000    010
+      010 -> 111 -> 010
+      010    000    010
 10. Overpopulation test
    1. 111    101
       111 -> 000
