@@ -30,7 +30,7 @@ Build a production-ready RESTful API for Conway's Game of Life using .NET 8.0 wi
 - `HashSet<(int x, int y)> LiveCells`
 - `GenerateNextStep()` → `BoardState` method (implements the 4 rules of Life)
 - `GenerateBoardArray()` → `int[,]` method (returns 2D array for API responses)
-- Constructor that accepts Board and generation number
+- Constructor that accepts Board
 
 ### 1.2 Implement BoardState.GenerateNextStep()
 **Logic:** Implement the pseudocode from PLANNING.md

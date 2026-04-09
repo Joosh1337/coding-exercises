@@ -1,9 +1,17 @@
+using LiteDB;
+using api.Repositories;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Configure LiteDB and repository
+var databasePath = Path.Combine(AppContext.BaseDirectory, "game_of_life.db");
+builder.Services.AddSingleton(_ => new LiteDatabase($"Filename={databasePath};Mode=Exclusive"));
+builder.Services.AddScoped<IBoardRepository, LiteBoardRepository>();
 
 var app = builder.Build();
 
