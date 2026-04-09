@@ -33,7 +33,7 @@ public class BoardState {
         Generation = 0;
         Width = board.Width;
         Height = board.Height;
-        LiveCells = new HashSet<(int x, int y)>(board.LiveCells);
+        LiveCells = new HashSet<(int x, int y)>(board.LiveCells.Select(c => (c.X, c.Y)));
     }
 
     /// <summary>

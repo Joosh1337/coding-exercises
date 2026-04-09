@@ -19,10 +19,16 @@ Build a production-ready RESTful API for Conway's Game of Life using .NET 8.0 wi
 - `api/Models/Board.cs` — Persistent entity (ID, Width, Height, LiveCells)
 - `api/Models/BoardState.cs` — Runtime computed state (Generation, Width, Height, LiveCells + logic)
 
+**CellCoordinate Requirements:**
+This exists to help with DB mapping
+- `int X`
+- `int Y`
+- `override Equals` (to compare by value rather to reference)
+
 **Board.cs Requirements:**
 - `Guid Id` (unique identifier)
 - `int Width`, `int Height` (board dimensions)
-- `HashSet<(int x, int y)> LiveCells` (state representation)
+- `List<CellCoordinate> LiveCells` (state representation)
 
 **BoardState.cs Requirements:**
 - `int Generation` (generation number)
@@ -30,7 +36,7 @@ Build a production-ready RESTful API for Conway's Game of Life using .NET 8.0 wi
 - `HashSet<(int x, int y)> LiveCells`
 - `GenerateNextStep()` → `BoardState` method (implements the 4 rules of Life)
 - `GenerateBoardArray()` → `int[,]` method (returns 2D array for API responses)
-- Constructor that accepts Board
+- Constructor that accepts Board, must convert a CellCoordinate List to a tuple HashSet
 
 ### 1.2 Implement BoardState.GenerateNextStep()
 **Logic:** Implement the pseudocode from PLANNING.md
@@ -47,7 +53,7 @@ Build a production-ready RESTful API for Conway's Game of Life using .NET 8.0 wi
 Create utility class for detecting when a board reaches a final state or cycles:
 - Method: `IsStable(BoardState current, BoardState previous)` → `bool`
   - Returns true if current.LiveCells == previous.LiveCells
-- Method: `HasCycleWithinLimit(Board board, int maxIterations)` → `bool`
+- Method: `HasStableStateWithinLimit(Board board, int maxIterations)` → `bool`
   - Iterates up to maxIterations computing states
   - Returns whether the board stabilizes or cycles
 

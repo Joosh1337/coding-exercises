@@ -19,13 +19,14 @@ public static class CycleDetection {
     }
 
     /// <summary>
-    /// Iterates through board generations to detect if the board reaches a stable state
-    /// or cycles within the specified iteration limit.
+    /// Detects if a board reaches a stable state (where a generation equals the previous generation)
+    /// within the specified iteration limit.
+    /// Note: This only detects period-1 stable states, not period-N cycles.
     /// </summary>
     /// <param name="board">The initial board state.</param>
     /// <param name="maxIterations">Maximum number of iterations to compute.</param>
     /// <returns>True if a stable state was detected within maxIterations, false otherwise</returns>
-    public static bool HasCycleWithinLimit(Board board, int maxIterations) {
+    public static bool HasStableStateWithinLimit(Board board, int maxIterations) {
         if (board == null || maxIterations <= 0)
             return false;
 
