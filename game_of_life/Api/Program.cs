@@ -12,7 +12,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Configure LiteDB and repository
-var databasePath = Path.Combine(AppContext.BaseDirectory, "game_of_life.db");
+var databaseFileName = builder.Configuration["GameOfLife:DatabasePath"] ?? "game_of_life.db";
+var databasePath = Path.Combine(AppContext.BaseDirectory, databaseFileName);
 builder.Services.AddSingleton(_ => new LiteDatabase($"Filename={databasePath};Mode=Exclusive"));
 builder.Services.AddScoped<IBoardRepository, LiteBoardRepository>();
 
