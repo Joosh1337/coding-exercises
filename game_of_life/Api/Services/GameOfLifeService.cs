@@ -34,10 +34,10 @@ public class GameOfLifeService : IGameOfLifeService {
     /// <summary>
     /// Creates a new board with the specified dimensions and initial live cells.
     /// </summary>
-    public async Task<Guid> CreateBoard(int width, int height, int[][] liveCells) {
+    public async Task<Guid> CreateBoard(int width, int height, int[][] initialCells) {
         try {
             // Convert array format to CellCoordinate list
-            var cellCoordinates = ConvertArrayToCellCoordinates(width, height, liveCells);
+            var cellCoordinates = ConvertArrayToCellCoordinates(width, height, initialCells);
             
             // Create board with validation
             var board = new Board(width, height, cellCoordinates);
@@ -114,17 +114,18 @@ public class GameOfLifeService : IGameOfLifeService {
     private List<CellCoordinate> ConvertArrayToCellCoordinates(int width, int height, int[][] cells) {
         var liveCells = new List<CellCoordinate>();
 
-        foreach (var cell in cells) {
-            if (cell.Length != 2)
-                throw new ArgumentException("Each cell must have exactly 2 coordinates [x, y].");
+        if (cells.Length != height)
+            throw new ArgumentException($"Grid must have {height} rows, but got {cells.Length}.");
 
-            int x = cell[0];
-            int y = cell[1];
+        for (int y = 0; y < height; y++) {
+            if (cells[y].Length != width)
+                throw new ArgumentException($"Row {y} must have {width} columns, but got {cells[y].Length}.");
 
-            if (x < 0 || x >= width || y < 0 || y >= height)
-                throw new ArgumentException($"Cell coordinate [{x}, {y}] is outside board bounds [{width}x{height}].");
-
-            liveCells.Add(new CellCoordinate(x, y));
+            for (int x = 0; x < width; x++) {
+                if (cells[y][x] == 1) {
+                    liveCells.Add(new CellCoordinate(x, y));
+                }
+            }
         }
 
         return liveCells;

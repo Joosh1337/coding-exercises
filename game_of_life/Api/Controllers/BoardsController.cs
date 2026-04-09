@@ -26,10 +26,10 @@ public class BoardsController : ControllerBase {
     [HttpPost]
     public async Task<IActionResult> CreateBoard([FromBody] CreateBoardDto request) {
         try {
-            if (request == null || request.LiveCells == null)
+            if (request == null || request.InitialCells == null)
                 return BadRequest(new ErrorResponse(400, "Invalid request: LiveCells array is required."));
 
-            var boardId = await _gameOfLifeService.CreateBoard(request.Width, request.Height, request.LiveCells);
+            var boardId = await _gameOfLifeService.CreateBoard(request.Width, request.Height, request.InitialCells);
 
             return Ok(new SuccessResponse<CreateBoardResponse>(
                 new CreateBoardResponse(boardId),
@@ -70,9 +70,9 @@ public class BoardsController : ControllerBase {
     public async Task<IActionResult> GetNextState(Guid id) {
         try {
             var boardState = await _gameOfLifeService.GetStatesAhead(id, 1);
-            var response = BoardStateResponse.FromBoardState(boardState);
+            var response = BoardRepresentationResponse.FromBoardState(boardState);
 
-            return Ok(new SuccessResponse<BoardStateResponse>(
+            return Ok(new SuccessResponse<BoardRepresentationResponse>(
                 response,
                 "Next generation state retrieved successfully."
             ));
@@ -92,9 +92,9 @@ public class BoardsController : ControllerBase {
                 return BadRequest(new ErrorResponse(400, "Steps must be greater than 0.", new[] { $"Received steps: {steps}" }));
 
             var boardState = await _gameOfLifeService.GetStatesAhead(id, steps);
-            var response = BoardStateResponse.FromBoardState(boardState);
+            var response = BoardRepresentationResponse.FromBoardState(boardState);
 
-            return Ok(new SuccessResponse<BoardStateResponse>(
+            return Ok(new SuccessResponse<BoardRepresentationResponse>(
                 response,
                 $"Board state after {steps} steps retrieved successfully."
             ));
@@ -114,9 +114,9 @@ public class BoardsController : ControllerBase {
     public async Task<IActionResult> GetFinalState(Guid id) {
         try {
             var boardState = await _gameOfLifeService.GetFinalState(id);
-            var response = BoardStateResponse.FromBoardState(boardState);
+            var response = BoardRepresentationResponse.FromBoardState(boardState);
 
-            return Ok(new SuccessResponse<BoardStateResponse>(
+            return Ok(new SuccessResponse<BoardRepresentationResponse>(
                 response,
                 "Final stable state retrieved successfully."
             ));

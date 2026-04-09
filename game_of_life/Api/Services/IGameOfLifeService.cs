@@ -11,10 +11,10 @@ public interface IGameOfLifeService {
     /// </summary>
     /// <param name="width">Board width (must be > 0)</param>
     /// <param name="height">Board height (must be > 0)</param>
-    /// <param name="liveCells">Jagged array of live cell coordinates [x, y]</param>
+    /// <param name="initialCells">2D array where non-zero values indicate live cells</param>
     /// <returns>The ID of the created board</returns>
     /// <exception cref="InvalidBoardStateException">If dimensions are invalid or cells are out of bounds</exception>
-    Task<Guid> CreateBoard(int width, int height, int[][] liveCells);
+    Task<Guid> CreateBoard(int width, int height, int[][] initialCells);
 
     /// <summary>
     /// Retrieves the current board state at generation 0.

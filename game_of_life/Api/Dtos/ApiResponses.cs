@@ -103,6 +103,52 @@ public class BoardStateResponse {
 }
 
 /// <summary>
+/// Response DTO for representing a board state with full board representation.
+/// Used for /states endpoints to return the complete board grid.
+/// </summary>
+public class BoardRepresentationResponse {
+    /// <summary>
+    /// The current generation number.
+    /// </summary>
+    public int Generation { get; set; }
+
+    /// <summary>
+    /// The width of the board.
+    /// </summary>
+    public int Width { get; set; }
+
+    /// <summary>
+    /// The height of the board.
+    /// </summary>
+    public int Height { get; set; }
+
+    /// <summary>
+    /// 2D array representing the board state where 1 = alive, 0 = dead.
+    /// Array is [y][x] indexed (rows first, then columns).
+    /// </summary>
+    public int[][] BoardDisplay { get; set; }
+
+    public BoardRepresentationResponse(int generation, int width, int height, int[][] boardDisplay) {
+        Generation = generation;
+        Width = width;
+        Height = height;
+        BoardDisplay = boardDisplay;
+    }
+
+    /// <summary>
+    /// Creates a BoardRepresentationResponse from a BoardState domain model.
+    /// </summary>
+    public static BoardRepresentationResponse FromBoardState(api.Models.BoardState boardState) {
+        return new BoardRepresentationResponse(
+            boardState.Generation,
+            boardState.Width,
+            boardState.Height,
+            boardState.GenerateBoardArray()
+        );
+    }
+}
+
+/// <summary>
 /// Request DTO for creating a new board.
 /// </summary>
 public class CreateBoardDto {
@@ -119,7 +165,7 @@ public class CreateBoardDto {
     /// <summary>
     /// Array of live cell coordinates [x, y].
     /// </summary>
-    public required int[][] LiveCells { get; set; }
+    public required int[][] InitialCells { get; set; }
 }
 
 /// <summary>
