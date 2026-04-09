@@ -39,8 +39,12 @@ public class GameOfLifeServiceTests {
     [Fact]
     public async Task CreateBoard_WithValidInput_CreatesAndPersistsBoardSuccessfully() {
         // Arrange
-        int width = 5, height = 5;
-        int[][] liveCells = new[] { new[] { 0, 0 }, new[] { 1, 1 }, new[] { 2, 2 } };
+        int width = 3, height = 3;
+        int[][] initialCells = new[] {
+            new[] { 1, 0, 0 },
+            new[] { 0, 1, 0 },
+            new[] { 0, 0, 1 } 
+        };
         var expectedId = Guid.NewGuid();
 
         _mockRepository
@@ -51,7 +55,7 @@ public class GameOfLifeServiceTests {
             });
 
         // Act
-        var result = await _service.CreateBoard(width, height, liveCells);
+        var result = await _service.CreateBoard(width, height, initialCells);
 
         // Assert
         result.Should().Be(expectedId);
@@ -62,11 +66,11 @@ public class GameOfLifeServiceTests {
     public async Task CreateBoard_WithZeroWidth_ThrowsInvalidBoardStateException() {
         // Arrange
         int width = 0, height = 5;
-        int[][] liveCells = Array.Empty<int[]>();
+        int[][] initialCells = Array.Empty<int[]>();
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
-            _service.CreateBoard(width, height, liveCells));
+            _service.CreateBoard(width, height, initialCells));
 
         _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
     }
@@ -75,11 +79,11 @@ public class GameOfLifeServiceTests {
     public async Task CreateBoard_WithNegativeHeight_ThrowsInvalidBoardStateException() {
         // Arrange
         int width = 5, height = -1;
-        int[][] liveCells = Array.Empty<int[]>();
+        int[][] initialCells = Array.Empty<int[]>();
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
-            _service.CreateBoard(width, height, liveCells));
+            _service.CreateBoard(width, height, initialCells));
 
         _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
     }
@@ -88,11 +92,11 @@ public class GameOfLifeServiceTests {
     public async Task CreateBoard_WithCellOutsideBounds_ThrowsInvalidBoardStateException() {
         // Arrange
         int width = 5, height = 5;
-        int[][] liveCells = new[] { new[] { 5, 5 } }; // Outside bounds (0-4)
+        int[][] initialCells = new[] { new[] { 5, 5 } }; // Outside bounds (0-4)
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
-            _service.CreateBoard(width, height, liveCells));
+            _service.CreateBoard(width, height, initialCells));
 
         _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
     }
@@ -101,11 +105,11 @@ public class GameOfLifeServiceTests {
     public async Task CreateBoard_WithNegativeCellCoordinate_ThrowsInvalidBoardStateException() {
         // Arrange
         int width = 5, height = 5;
-        int[][] liveCells = new[] { new[] { -1, 2 } };
+        int[][] initialCells = new[] { new[] { -1, 2 } };
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
-            _service.CreateBoard(width, height, liveCells));
+            _service.CreateBoard(width, height, initialCells));
 
         _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
     }
@@ -114,34 +118,26 @@ public class GameOfLifeServiceTests {
     public async Task CreateBoard_WithInvalidCellFormat_ThrowsInvalidBoardStateException() {
         // Arrange
         int width = 5, height = 5;
-        int[][] liveCells = new[] { new[] { 1 } }; // Missing Y coordinate
+        int[][] initialCells = new[] { new[] { 1 } }; // Missing Y coordinate
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
-            _service.CreateBoard(width, height, liveCells));
+            _service.CreateBoard(width, height, initialCells));
 
         _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
     }
 
     [Fact]
-    public async Task CreateBoard_WithEmptyLiveCells_CreatesValidBoard() {
+    public async Task CreateBoard_WithEmptyInitialCells_ThrowsInvalidBoardStateException() {
         // Arrange
         int width = 5, height = 5;
-        int[][] liveCells = Array.Empty<int[]>();
-        var expectedId = Guid.NewGuid();
+        int[][] initialCells = Array.Empty<int[]>();
 
-        _mockRepository
-            .Setup(r => r.CreateBoard(It.IsAny<Board>()))
-            .ReturnsAsync((Board board) => {
-                board.Id = expectedId;
-                return board;
-            });
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
+            _service.CreateBoard(width, height, initialCells));
 
-        // Act
-        var result = await _service.CreateBoard(width, height, liveCells);
-
-        // Assert
-        result.Should().Be(expectedId);
+        _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
     }
 
     #endregion
@@ -442,7 +438,13 @@ public class GameOfLifeServiceTests {
     public async Task CompleteWorkflow_CreateBoardComputeStatesAndDelete() {
         // Arrange
         var boardId = Guid.NewGuid();
-        var liveCells = new int[][] { new[] { 1, 1 }, new[] { 1, 2 }, new[] { 1, 3 } };
+        var initialCells = new int[][] {
+            new[] { 0, 0, 0, 0, 0 },
+            new[] { 0, 1, 1, 1, 0 },
+            new[] { 0, 0, 0, 0, 0 },
+            new[] { 0, 0, 0, 0, 0 },
+            new[] { 0, 0, 0, 0, 0 }
+        };
 
         _mockRepository
             .Setup(r => r.CreateBoard(It.IsAny<Board>()))
@@ -467,7 +469,7 @@ public class GameOfLifeServiceTests {
             .ReturnsAsync(true);
 
         // Act
-        var createdId = await _service.CreateBoard(5, 5, liveCells);
+        var createdId = await _service.CreateBoard(5, 5, initialCells);
         var initialState = await _service.GetBoardState(createdId);
         var nextState = await _service.GetStatesAhead(createdId, 1);
         var deleteResult = await _service.DeleteBoard(createdId);
