@@ -158,10 +158,6 @@ Requirements:
   - Returns BoardState at generation 0
   - Throws if board not found
 
-- `GetNextState(Guid boardId)` → `Task<BoardState>`
-  - Gets board, computes one step
-  - Returns next generation
-
 - `GetStatesAhead(Guid boardId, int steps)` → `Task<BoardState>`
   - Validates steps > 0 (throw if negative or zero)
   - Computes N generations ahead
@@ -226,12 +222,14 @@ Requirements:
 
 3. **GET /boards/{id}/states/next**
    - Response: Next generation state
+   - Calls `GameOfLifeService.GetStatesAhead(boardId, 1)` directly
    - Uses BoardStateResponse format
    - Error: 404 if board not found
 
 4. **GET /boards/{id}/states?steps=N**
    - Query parameter: steps (int)
    - Response: State after N generations
+   - Calls `GameOfLifeService.GetStatesAhead(boardId, steps)`
    - Validation: steps > 0 (400 if not)
    - Error: 404 if board not found
 
@@ -331,7 +329,7 @@ Add configuration:
 ### Manual Endpoint Testing (via Swagger or curl)
 1. POST /boards → verify board created with unique ID
 2. GET /boards/{id} → verify returns initial state
-3. GET /boards/{id}/states/next → verify state advances correctly
+3. GET /boards/{id}/states/next → verify next generation (calls GetStatesAhead(1))
 4. GET /boards/{id}/states?steps=5 → verify 5 steps ahead
 5. GET /boards/{id}/states/final → verify returns stable state or error
 6. DELETE /boards/{id} → verify board removed
@@ -348,7 +346,7 @@ Add configuration:
 
 ## Notes & Assumptions
 - LiteDB database file persists in bin/Debug or application directory (configured in Program.cs)
-- All time-sensitive operations (next/ahead/final) compute in-memory; no caching of intermediate states
+- All time-sensitive operations (GetStatesAhead, GetFinalState) compute in-memory; no caching of intermediate states
 - API uses camelCase for JSON (LiteDB default or Newtonsoft Json configuration)
 - Board coordinates are 0-indexed (0,0 is top-left)
 - Out-of-bounds cells are treated as dead (no wrapping)
