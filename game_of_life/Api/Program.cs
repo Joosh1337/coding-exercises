@@ -1,10 +1,13 @@
 using LiteDB;
 using api.Repositories;
+using Api.Services;
+using Api.Dtos;
+using Api.Exceptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -12,6 +15,9 @@ builder.Services.AddSwaggerGen();
 var databasePath = Path.Combine(AppContext.BaseDirectory, "game_of_life.db");
 builder.Services.AddSingleton(_ => new LiteDatabase($"Filename={databasePath};Mode=Exclusive"));
 builder.Services.AddScoped<IBoardRepository, LiteBoardRepository>();
+
+// Register Game of Life service
+builder.Services.AddScoped<IGameOfLifeService, GameOfLifeService>();
 
 var app = builder.Build();
 
@@ -22,31 +28,76 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Add global exception handling middleware
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
+app.MapControllers();
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+/// <summary>
+/// Global exception handling middleware to catch and format exceptions consistently.
+/// </summary>
+public class GlobalExceptionHandlingMiddleware
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    private readonly RequestDelegate _next;
+    private readonly ILogger<GlobalExceptionHandlingMiddleware> _logger;
+
+    public GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlingMiddleware> logger)
+    {
+        _next = next;
+        _logger = logger;
+    }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        try
+        {
+            await _next(context);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An unhandled exception occurred.");
+            await HandleExceptionAsync(context, ex);
+        }
+    }
+
+    private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+    {
+        context.Response.ContentType = "application/json";
+
+        var response = exception switch
+        {
+            BoardNotFoundException ex => new
+            {
+                statusCode = StatusCodes.Status404NotFound,
+                errorResponse = new ErrorResponse(404, ex.Message)
+            },
+            InvalidBoardStateException ex => new
+            {
+                statusCode = StatusCodes.Status400BadRequest,
+                errorResponse = new ErrorResponse(400, ex.Message)
+            },
+            InvalidStepsException ex => new
+            {
+                statusCode = StatusCodes.Status400BadRequest,
+                errorResponse = new ErrorResponse(400, ex.Message)
+            },
+            NoFinalStateException ex => new
+            {
+                statusCode = StatusCodes.Status422UnprocessableEntity,
+                errorResponse = new ErrorResponse(422, ex.Message)
+            },
+            _ => new
+            {
+                statusCode = StatusCodes.Status500InternalServerError,
+                errorResponse = new ErrorResponse(500, "An unexpected error occurred.")
+            }
+        };
+
+        context.Response.StatusCode = response.statusCode;
+        return context.Response.WriteAsJsonAsync(response.errorResponse);
+    }
 }
