@@ -37,19 +37,9 @@ public class BoardState {
     }
 
     /// <summary>
-    /// Creates a BoardState with the specified parameters.
-    /// </summary>
-    public BoardState(int generation, int width, int height, HashSet<(int x, int y)> liveCells) {
-        Generation = generation;
-        Width = width;
-        Height = height;
-        LiveCells = liveCells;
-    }
-
-    /// <summary>
     /// Default constructor for deserialization or manual creation.
     /// </summary>
-    public BoardState() {}
+    public BoardState() { }
 
     /// <summary>
     /// Generates the next generation state based on Conway's Game of Life rules:
