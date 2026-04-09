@@ -47,7 +47,7 @@ Build a production-ready RESTful API for Conway's Game of Life using .NET 8.0 wi
 Create utility class for detecting when a board reaches a final state or cycles:
 - Method: `IsStable(BoardState current, BoardState previous)` → `bool`
   - Returns true if current.LiveCells == previous.LiveCells
-- Method: `HasCycleWithinLimit(Board board, int maxIterations)` → `(bool hasFinal)`
+- Method: `HasCycleWithinLimit(Board board, int maxIterations)` → `bool`
   - Iterates up to maxIterations computing states
   - Returns whether the board stabilizes or cycles
 
