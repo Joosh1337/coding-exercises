@@ -89,7 +89,7 @@ public class GameOfLifeService : IGameOfLifeService {
             var nextState = currentState.GenerateNextStep();
 
             // Check if we've reached a stable state (no change from previous generation)
-            if (CycleDetection.IsStable(nextState, currentState)) {
+            if (StableStateDetection.IsStable(nextState, currentState)) {
                 return nextState;
             }
 

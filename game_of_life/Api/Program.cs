@@ -23,8 +23,7 @@ builder.Services.AddScoped<IGameOfLifeService, GameOfLifeService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+if (app.Environment.IsDevelopment()) {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
@@ -41,58 +40,46 @@ app.Run();
 /// <summary>
 /// Global exception handling middleware to catch and format exceptions consistently.
 /// </summary>
-public class GlobalExceptionHandlingMiddleware
-{
+public class GlobalExceptionHandlingMiddleware {
     private readonly RequestDelegate _next;
     private readonly ILogger<GlobalExceptionHandlingMiddleware> _logger;
 
-    public GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlingMiddleware> logger)
-    {
+    public GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlingMiddleware> logger) {
         _next = next;
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context)
-    {
-        try
-        {
+    public async Task InvokeAsync(HttpContext context) {
+        try {
             await _next(context);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "An unhandled exception occurred.");
             await HandleExceptionAsync(context, ex);
         }
     }
 
-    private static Task HandleExceptionAsync(HttpContext context, Exception exception)
-    {
+    private static Task HandleExceptionAsync(HttpContext context, Exception exception) {
         context.Response.ContentType = "application/json";
 
-        var response = exception switch
-        {
-            BoardNotFoundException ex => new
-            {
+        var response = exception switch {
+            BoardNotFoundException ex => new {
                 statusCode = StatusCodes.Status404NotFound,
                 errorResponse = new ErrorResponse(404, ex.Message)
             },
-            InvalidBoardStateException ex => new
-            {
+            InvalidBoardStateException ex => new {
                 statusCode = StatusCodes.Status400BadRequest,
                 errorResponse = new ErrorResponse(400, ex.Message)
             },
-            InvalidStepsException ex => new
-            {
+            InvalidStepsException ex => new {
                 statusCode = StatusCodes.Status400BadRequest,
                 errorResponse = new ErrorResponse(400, ex.Message)
             },
-            NoFinalStateException ex => new
-            {
+            NoFinalStateException ex => new {
                 statusCode = StatusCodes.Status422UnprocessableEntity,
                 errorResponse = new ErrorResponse(422, ex.Message)
             },
-            _ => new
-            {
+            _ => new {
                 statusCode = StatusCodes.Status500InternalServerError,
                 errorResponse = new ErrorResponse(500, "An unexpected error occurred.")
             }

@@ -47,10 +47,10 @@ This exists to help with DB mapping
   3. Live cell with >3 neighbors → dies
   4. Dead cell with exactly 3 neighbors → becomes alive
 
-### 1.3 Implement Cycle Detection Logic
-**File:** `api/Models/CycleDetection.cs`
+### 1.3 Implement Stable State Detection Logic
+**File:** `api/Models/StableStateDetection.cs`
 
-Create utility class for detecting when a board reaches a final state or cycles:
+Create utility class for detecting when a board reaches a final state:
 - Method: `IsStable(BoardState current, BoardState previous)` → `bool`
   - Returns true if current.LiveCells == previous.LiveCells
 - Method: `HasStableStateWithinLimit(Board board, int maxIterations)` → `bool`
@@ -117,8 +117,8 @@ Requirements:
    - Live cells at edges don't cause out-of-bounds errors
    - Cells outside grid are treated as dead
 
-### 3.2 Create Test File for Cycle Detection
-**File:** `api.Tests/Models/CycleDetectionTests.cs`
+### 3.2 Create Test File for StableStateDetection Detection
+**File:** `api.Tests/Models/StableStateDetectionTests.cs`
 
 **Test Cases:**
 1. Stable board (all cells dead for 5 iterations)
@@ -164,7 +164,7 @@ Requirements:
   - Returns final state only
 
 - `GetFinalState(Guid boardId)` → `Task<BoardState>`
-  - Uses CycleDetection to find stable state
+  - Uses StableStateDetection to find stable state
   - Respects configurable max iterations (from appsettings)
   - Throws `NoFinalStateException` if max iterations exceeded
 
@@ -280,7 +280,7 @@ Add configuration:
 | Step | Task | Depends On |
 |------|------|-----------|
 | 1    | Board & BoardState models | — |
-| 2    | CycleDetection utility | Step 1 |
+| 2    | StableStateDetection utility | Step 1 |
 | 3    | Write all unit tests (failing) | Steps 1-2 |
 | 4    | IBoardRepository interface | Step 1 |
 | 5    | LiteBoardRepository implementation | Steps 3-4 |
@@ -300,7 +300,7 @@ Add configuration:
 **New Files:**
 - `api/Models/Board.cs`
 - `api/Models/BoardState.cs`
-- `api/Models/CycleDetection.cs`
+- `api/Models/StableStateDetection.cs`
 - `api/Repositories/IBoardRepository.cs`
 - `api/Repositories/LiteBoardRepository.cs`
 - `api/Services/IGameOfLifeService.cs`
@@ -309,7 +309,7 @@ Add configuration:
 - `api/Controllers/BoardsController.cs`
 - `api/Dtos/ApiResponses.cs`
 - `api.Tests/Models/BoardStateTests.cs`
-- `api.Tests/Models/CycleDetectionTests.cs`
+- `api.Tests/Models/StableStateDetectionTests.cs`
 - `api.Tests/Repositories/LiteBoardRepositoryTests.cs`
 - `api.Tests/Services/GameOfLifeServiceTests.cs`
 

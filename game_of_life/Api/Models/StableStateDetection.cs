@@ -3,7 +3,7 @@ namespace api.Models;
 /// <summary>
 /// Utility class for detecting when a Game of Life board reaches a stable state or cycles.
 /// </summary>
-public static class CycleDetection {
+public static class StableStateDetection {
     /// <summary>
     /// Determines if a board state is stable (no change from the previous generation).
     /// </summary>

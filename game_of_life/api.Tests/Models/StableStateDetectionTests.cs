@@ -3,7 +3,7 @@ using api.Models;
 
 namespace Api.Tests.Models;
 
-public class CycleDetectionTests {
+public class StableStateDetectionTests {
     /// <summary>
     /// Helper method to create a board state with specified live cells
     /// </summary>
@@ -26,7 +26,7 @@ public class CycleDetectionTests {
         var state2 = state1.GenerateNextStep(); // Becomes horizontal
 
         // Act
-        bool isStable = CycleDetection.IsStable(state2, state1);
+        bool isStable = StableStateDetection.IsStable(state2, state1);
 
         // Assert
         Assert.False(isStable);
@@ -39,7 +39,7 @@ public class CycleDetectionTests {
         var state2 = state1.GenerateNextStep(); // Same block pattern
 
         // Act
-        bool isStable = CycleDetection.IsStable(state1, state2);
+        bool isStable = StableStateDetection.IsStable(state1, state2);
 
         // Assert
         Assert.True(isStable);
@@ -59,7 +59,7 @@ public class CycleDetectionTests {
         var state2 = new BoardState(board); // Same LiveCells, same generation
 
         // Act
-        bool isStable = CycleDetection.IsStable(state2, state1);
+        bool isStable = StableStateDetection.IsStable(state2, state1);
 
         // Assert: Should check if live cells are the same
         Assert.True(isStable);
@@ -80,7 +80,7 @@ public class CycleDetectionTests {
         };
 
         // Act
-        bool hasStable = CycleDetection.HasStableStateWithinLimit(board, 100);
+        bool hasStable = StableStateDetection.HasStableStateWithinLimit(board, 100);
 
         // Assert
         Assert.True(hasStable);
@@ -97,7 +97,7 @@ public class CycleDetectionTests {
         };
 
         // Act
-        bool hasStable = CycleDetection.HasStableStateWithinLimit(board, 100);
+        bool hasStable = StableStateDetection.HasStableStateWithinLimit(board, 100);
 
         // Assert: Single cell dies (0 neighbors) -> empty board -> stable
         Assert.True(hasStable);
@@ -115,7 +115,7 @@ public class CycleDetectionTests {
         };
 
         // Act
-        bool hasStable = CycleDetection.HasStableStateWithinLimit(board, 100);
+        bool hasStable = StableStateDetection.HasStableStateWithinLimit(board, 100);
 
         // Assert: Period-2 cycles are NOT detected by the current implementation
         Assert.False(hasStable);
