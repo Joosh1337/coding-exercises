@@ -48,7 +48,7 @@ public class BoardsController : ControllerBase {
     /// <summary>
     /// Retrieves all initial board states within the paging parameters (generation 0).
     /// </summary>
-    public IActionResult GetBoards(PaginationDto request) {
+    public IActionResult GetBoards([FromQuery] PaginationDto request) {
         try {
             var responseList = new List<BoardResponse>();
             var boardStates = _gameOfLifeService.GetBoardStates(request.Page, request.PageSize);
