@@ -1,3 +1,4 @@
+using api.Exceptions;
 using api.Models;
 
 namespace api.Tests.Models;
@@ -66,10 +67,10 @@ public class StableStateDetectionTests {
 
     #endregion
 
-    #region HasStableStateWithinLimit Tests
+    #region GetStableStateWithinLimit Tests
 
     [Fact]
-    public void HasStableStateWithinLimit_ReturnsTrue_ForStableBoard() {
+    public void GetStableStateWithinLimit_ReturnsFinalState_ForStableBoard() {
         // Arrange: Block pattern (stable after first generation)
         var board = new Board {
             Id = Guid.NewGuid(),
@@ -79,14 +80,14 @@ public class StableStateDetectionTests {
         };
 
         // Act
-        bool hasStable = StableStateDetection.HasStableStateWithinLimit(board, 100);
+        var stableState = StableStateDetection.GetStableStateWithinLimit(board, 100);
 
         // Assert
-        Assert.True(hasStable);
+        Assert.NotNull(stableState);
     }
 
     [Fact]
-    public void HasStableStateWithinLimit_ReturnsTrue_ForStabilizingBoard() {
+    public void GetStableStateWithinLimit_ReturnsFinalState_ForStabilizingBoard() {
         // Arrange: Board with a single isolated cell (dies immediately to empty board, which is stable)
         var board = new Board {
             Id = Guid.NewGuid(),
@@ -96,14 +97,14 @@ public class StableStateDetectionTests {
         };
 
         // Act
-        bool hasStable = StableStateDetection.HasStableStateWithinLimit(board, 100);
+        var stableState = StableStateDetection.GetStableStateWithinLimit(board, 100);
 
         // Assert: Single cell dies (0 neighbors) -> empty board -> stable
-        Assert.True(hasStable);
+        Assert.NotNull(stableState);
     }
 
     [Fact]
-    public void HasStableStateWithinLimit_ReturnsFalse_WhenMaxIterationsExceeded() {
+    public void GetStableStateWithinLimit_ThrowsNoFinalStateException_WhenMaxIterationsExceeded() {
         // Arrange: A pattern that doesn't stabilize within the iteration limit
         // Using a chaotic pattern or one that takes many iterations
         var board = new Board {
@@ -113,11 +114,8 @@ public class StableStateDetectionTests {
             LiveCells = new List<CellCoordinate> { new(1, 0), new(1, 1), new(1, 2) }
         };
 
-        // Act
-        bool hasStable = StableStateDetection.HasStableStateWithinLimit(board, 100);
-
-        // Assert: Period-2 cycles are NOT detected by the current implementation
-        Assert.False(hasStable);
+        // Act & Assert
+        Assert.Throws<NoFinalStateException>(() => StableStateDetection.GetStableStateWithinLimit(board, 100));
     }
 
     #endregion

@@ -90,23 +90,7 @@ public class GameOfLifeService : IGameOfLifeService {
     /// </summary>
     public BoardState GetFinalState(Guid boardId) {
         var board = GetBoardOrThrow(boardId);
-        var currentState = new BoardState(board);
-        var previousState = currentState;
-
-        for (int i = 0; i < _maxIterationsForFinalState; i++) {
-            var nextState = currentState.GenerateNextStep();
-
-            // Check if we've reached a stable state (no change from previous generation)
-            if (StableStateDetection.IsStable(nextState, currentState)) {
-                return nextState;
-            }
-
-            previousState = currentState;
-            currentState = nextState;
-        }
-
-        // If we exit the loop without finding a stable state, throw an exception
-        throw new NoFinalStateException(_maxIterationsForFinalState);
+        return StableStateDetection.GetStableStateWithinLimit(board, _maxIterationsForFinalState);
     }
 
     /// <summary>

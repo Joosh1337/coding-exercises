@@ -1,3 +1,5 @@
+using api.Exceptions;
+
 namespace api.Models;
 
 /// <summary>
@@ -19,30 +21,29 @@ public static class StableStateDetection {
     }
 
     /// <summary>
-    /// Detects if a board reaches a stable state (where a generation equals the previous generation)
-    /// within the specified iteration limit.
-    /// Note: This only detects period-1 stable states, not period-N cycles.
+    /// Computes and returns the final stable state of the board.
+    /// Iterates up to the configured maximum iterations to find a stable state.
     /// </summary>
     /// <param name="board">The initial board state.</param>
     /// <param name="maxIterations">Maximum number of iterations to compute.</param>
-    /// <returns>True if a stable state was detected within maxIterations, false otherwise</returns>
-    public static bool HasStableStateWithinLimit(Board board, int maxIterations) {
-        if (board == null || maxIterations <= 0)
-            return false;
-
+    /// <returns>
+    ///     The final BoardState, if detected within maxIterations.
+    ///     Throws NoFinalStateException otherwise
+    /// </returns>
+    public static BoardState GetStableStateWithinLimit(Board board, int maxIterations) {
         var currentState = new BoardState(board);
-        BoardState previousState;
 
         for (int i = 0; i < maxIterations; i++) {
-            previousState = currentState;
-            currentState = currentState.GenerateNextStep();
+            var nextState = currentState.GenerateNextStep();
 
-            if (IsStable(currentState, previousState)) {
-                return true;
-            }
+            // Check if we've reached a stable state (no change from previous generation)
+            if (IsStable(nextState, currentState))
+                return nextState;
+
+            currentState = nextState;
         }
 
-        // Max iterations reached without finding a stable state
-        return false;
+        // If we exit the loop without finding a stable state, throw an exception
+        throw new NoFinalStateException(maxIterations);
     }
 }
