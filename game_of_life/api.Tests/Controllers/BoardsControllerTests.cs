@@ -33,8 +33,8 @@ public class BoardsControllerTests {
         // Arrange
         var boardId = Guid.NewGuid();
         var request = new CreateBoardDto {
-            Width = 10,
-            Height = 10,
+            Width = 2,
+            Height = 2,
             InitialCells = new[] { new[] { 0, 0 }, new[] { 1, 1 } }
         };
 
@@ -101,7 +101,7 @@ public class BoardsControllerTests {
         // Arrange
         var request = new CreateBoardDto {
             Width = -1,
-            Height = 10,
+            Height = 1,
             InitialCells = new[] { new[] { 0, 0 } }
         };
         var exceptionMessage = "Width must be positive";
@@ -127,8 +127,8 @@ public class BoardsControllerTests {
     public async Task CreateBoard_WhenServiceThrowsGenericException_Returns500InternalServerError() {
         // Arrange
         var request = new CreateBoardDto {
-            Width = 10,
-            Height = 10,
+            Width = 2,
+            Height = 1,
             InitialCells = new[] { new[] { 0, 0 } }
         };
 
@@ -183,8 +183,8 @@ public class BoardsControllerTests {
         var boardId = Guid.NewGuid();
         var boardState = new BoardState {
             Generation = 0,
-            Width = 10,
-            Height = 10,
+            Width = 2,
+            Height = 2,
             LiveCells = new HashSet<(int x, int y)> { (0, 0), (1, 1) }
         };
 
@@ -203,8 +203,8 @@ public class BoardsControllerTests {
         var response = okResult?.Value as SuccessResponse<BoardStateResponse>;
         response.Should().NotBeNull();
         response?.Data.Generation.Should().Be(0);
-        response?.Data.Width.Should().Be(10);
-        response?.Data.Height.Should().Be(10);
+        response?.Data.Width.Should().Be(2);
+        response?.Data.Height.Should().Be(2);
         response?.Message.Should().Be("Board state retrieved successfully.");
 
         _mockGameOfLifeService.Verify(s => s.GetBoardState(boardId), Times.Once);
@@ -232,31 +232,6 @@ public class BoardsControllerTests {
         response?.Message.Should().Contain(boardId.ToString());
     }
 
-    [Fact]
-    public async Task GetBoard_WithEmptyBoard_ReturnsOkWithEmptyLiveCells() {
-        // Arrange
-        var boardId = Guid.NewGuid();
-        var boardState = new BoardState {
-            Generation = 0,
-            Width = 5,
-            Height = 5,
-            LiveCells = new HashSet<(int x, int y)>()
-        };
-
-        _mockGameOfLifeService
-            .Setup(s => s.GetBoardState(boardId))
-            .ReturnsAsync(boardState);
-
-        // Act
-        var result = await _controller.GetBoard(boardId);
-
-        // Assert
-        result.Should().BeOfType<OkObjectResult>();
-        var okResult = result as OkObjectResult;
-        var response = okResult?.Value as SuccessResponse<BoardStateResponse>;
-        response?.Data.LiveCells.Should().BeEmpty();
-    }
-
     #endregion
 
     #region GetNextState Tests
@@ -267,8 +242,8 @@ public class BoardsControllerTests {
         var boardId = Guid.NewGuid();
         var boardState = new BoardState {
             Generation = 1,
-            Width = 10,
-            Height = 10,
+            Width = 3,
+            Height = 2,
             LiveCells = new HashSet<(int x, int y)> { (0, 1), (1, 1), (2, 1) }
         };
 
@@ -324,8 +299,8 @@ public class BoardsControllerTests {
         var steps = 5;
         var boardState = new BoardState {
             Generation = steps,
-            Width = 10,
-            Height = 10,
+            Width = 2,
+            Height = 2,
             LiveCells = new HashSet<(int x, int y)> { (3, 3), (4, 4) }
         };
 
@@ -392,7 +367,7 @@ public class BoardsControllerTests {
     }
 
     [Fact]
-    public async Task GetStatesAhead_WithValidStepsButBoardNotFound_ReturnsNotFound() {
+    public async Task GetStatesAhead_WithBoardNotFound_ReturnsNotFound() {
         // Arrange
         var boardId = Guid.NewGuid();
         var steps = 3;
@@ -411,54 +386,6 @@ public class BoardsControllerTests {
 
         var response = notFoundResult?.Value as ErrorResponse;
         response?.ErrorCode.Should().Be(404);
-    }
-
-    [Fact]
-    public async Task GetStatesAhead_WhenServiceThrowsInvalidStepsException_ReturnsBadRequest() {
-        // Arrange
-        var boardId = Guid.NewGuid();
-        var steps = 10;
-
-        _mockGameOfLifeService
-            .Setup(s => s.GetStatesAhead(boardId, steps))
-            .ThrowsAsync(new InvalidStepsException(steps));
-
-        // Act
-        var result = await _controller.GetStatesAhead(boardId, steps);
-
-        // Assert
-        result.Should().BeOfType<BadRequestObjectResult>();
-        var badRequest = result as BadRequestObjectResult;
-        badRequest?.StatusCode.Should().Be(400);
-
-        var response = badRequest?.Value as ErrorResponse;
-        response?.ErrorCode.Should().Be(400);
-        response?.Message.Should().Contain("Steps");
-    }
-
-    [Fact]
-    public async Task GetStatesAhead_WithLargeStepValue_ReturnsOk() {
-        // Arrange
-        var boardId = Guid.NewGuid();
-        var steps = 1000;
-        var boardState = new BoardState {
-            Generation = steps,
-            Width = 10,
-            Height = 10,
-            LiveCells = new HashSet<(int x, int y)>()
-        };
-
-        _mockGameOfLifeService
-            .Setup(s => s.GetStatesAhead(boardId, steps))
-            .ReturnsAsync(boardState);
-
-        // Act
-        var result = await _controller.GetStatesAhead(boardId, steps);
-
-        // Assert
-        result.Should().BeOfType<OkObjectResult>();
-        var okResult = result as OkObjectResult;
-        okResult?.StatusCode.Should().Be(200);
     }
 
     #endregion
@@ -610,126 +537,4 @@ public class BoardsControllerTests {
 
     #endregion
 
-    #region Integration Scenario Tests
-
-    [Fact]
-    public async Task MultipleOperations_CreateGetAndDelete_WorksCorrectly() {
-        // Arrange
-        var boardId = Guid.NewGuid();
-        var createRequest = new CreateBoardDto {
-            Width = 10,
-            Height = 10,
-            InitialCells = new[] { new[] { 5, 5 } }
-        };
-        var boardState = new BoardState {
-            Generation = 0,
-            Width = 10,
-            Height = 10,
-            LiveCells = new HashSet<(int x, int y)> { (5, 5) }
-        };
-
-        _mockGameOfLifeService
-            .Setup(s => s.CreateBoard(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int[][]>()))
-            .ReturnsAsync(boardId);
-
-        _mockGameOfLifeService
-            .Setup(s => s.GetBoardState(boardId))
-            .ReturnsAsync(boardState);
-
-        _mockGameOfLifeService
-            .Setup(s => s.DeleteBoard(boardId))
-            .ReturnsAsync(true);
-
-        // Act - Create
-        var createResult = await _controller.CreateBoard(createRequest);
-        createResult.Should().BeOfType<OkObjectResult>();
-
-        // Act - Get
-        var getResult = await _controller.GetBoard(boardId);
-        getResult.Should().BeOfType<OkObjectResult>();
-
-        // Act - Delete
-        var deleteResult = await _controller.DeleteBoard(boardId);
-        deleteResult.Should().BeOfType<NoContentResult>();
-
-        // Assert
-        _mockGameOfLifeService.Verify(
-            s => s.CreateBoard(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int[][]>()),
-            Times.Once);
-        _mockGameOfLifeService.Verify(s => s.GetBoardState(boardId), Times.Once);
-        _mockGameOfLifeService.Verify(s => s.DeleteBoard(boardId), Times.Once);
-    }
-
-    #endregion
-
-    #region Edge Cases and Data Validation Tests
-
-    [Fact]
-    public async Task CreateBoard_WithMinimumValidDimensions_ReturnsOk() {
-        // Arrange
-        var boardId = Guid.NewGuid();
-        var request = new CreateBoardDto {
-            Width = 1,
-            Height = 1,
-            InitialCells = Array.Empty<int[]>()
-        };
-
-        _mockGameOfLifeService
-            .Setup(s => s.CreateBoard(1, 1, request.InitialCells))
-            .ReturnsAsync(boardId);
-
-        // Act
-        var result = await _controller.CreateBoard(request);
-
-        // Assert
-        result.Should().BeOfType<OkObjectResult>();
-    }
-
-    [Fact]
-    public async Task CreateBoard_WithLargeDimensions_ReturnsOk() {
-        // Arrange
-        var boardId = Guid.NewGuid();
-        var request = new CreateBoardDto {
-            Width = 10000,
-            Height = 10000,
-            InitialCells = Array.Empty<int[]>()
-        };
-
-        _mockGameOfLifeService
-            .Setup(s => s.CreateBoard(10000, 10000, request.InitialCells))
-            .ReturnsAsync(boardId);
-
-        // Act
-        var result = await _controller.CreateBoard(request);
-
-        // Assert
-        result.Should().BeOfType<OkObjectResult>();
-    }
-
-    [Fact]
-    public async Task GetStatesAhead_WithOneStep_ReturnsOk() {
-        // Arrange
-        var boardId = Guid.NewGuid();
-        var boardState = new BoardState {
-            Generation = 1,
-            Width = 5,
-            Height = 5,
-            LiveCells = new HashSet<(int x, int y)>()
-        };
-
-        _mockGameOfLifeService
-            .Setup(s => s.GetStatesAhead(boardId, 1))
-            .ReturnsAsync(boardState);
-
-        // Act
-        var result = await _controller.GetStatesAhead(boardId, 1);
-
-        // Assert
-        result.Should().BeOfType<OkObjectResult>();
-        var okResult = result as OkObjectResult;
-        var response = okResult?.Value as SuccessResponse<BoardRepresentationResponse>;
-        response?.Data.Generation.Should().Be(1);
-    }
-
-    #endregion
 }

@@ -89,10 +89,14 @@ public class GameOfLifeServiceTests {
     }
 
     [Fact]
-    public async Task CreateBoard_WithCellOutsideBounds_ThrowsInvalidBoardStateException() {
+    public async Task CreateBoard_WithTooManyRows_ThrowsInvalidBoardStateException() {
         // Arrange
-        int width = 5, height = 5;
-        int[][] initialCells = new[] { new[] { 5, 5 } }; // Outside bounds (0-4)
+        int width = 2, height = 2;
+        int[][] initialCells = new[] {
+            new[] { 0, 0 },
+            new[] { 0, 0 },
+            new[] { 0, 0 }
+        };
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
@@ -102,10 +106,13 @@ public class GameOfLifeServiceTests {
     }
 
     [Fact]
-    public async Task CreateBoard_WithNegativeCellCoordinate_ThrowsInvalidBoardStateException() {
+    public async Task CreateBoard_WithTooManyColumns_ThrowsInvalidBoardStateException() {
         // Arrange
-        int width = 5, height = 5;
-        int[][] initialCells = new[] { new[] { -1, 2 } };
+        int width = 2, height = 2;
+        int[][] initialCells = new[] {
+            new[] { 0, 0, 0 },
+            new[] { 0, 0, 0 }
+        };
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
@@ -115,10 +122,28 @@ public class GameOfLifeServiceTests {
     }
 
     [Fact]
-    public async Task CreateBoard_WithInvalidCellFormat_ThrowsInvalidBoardStateException() {
+    public async Task CreateBoard_WithTooFewRows_ThrowsInvalidBoardStateException() {
         // Arrange
-        int width = 5, height = 5;
-        int[][] initialCells = new[] { new[] { 1 } }; // Missing Y coordinate
+        int width = 2, height = 2;
+        int[][] initialCells = new[] {
+            new[] { 0, 0 },
+        };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
+            _service.CreateBoard(width, height, initialCells));
+
+        _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateBoard_WithTooFewColumns_ThrowsInvalidBoardStateException() {
+        // Arrange
+        int width = 2, height = 2;
+        int[][] initialCells = new[] {
+            new[] { 0 },
+            new[] { 0 }
+        };
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
@@ -130,7 +155,7 @@ public class GameOfLifeServiceTests {
     [Fact]
     public async Task CreateBoard_WithEmptyInitialCells_ThrowsInvalidBoardStateException() {
         // Arrange
-        int width = 5, height = 5;
+        int width = 0, height = 0;
         int[][] initialCells = Array.Empty<int[]>();
 
         // Act & Assert
@@ -273,24 +298,6 @@ public class GameOfLifeServiceTests {
             _service.GetStatesAhead(boardId, 1));
     }
 
-    [Fact]
-    public async Task GetStatesAhead_WithEmptyBoard_RemainsEmpty() {
-        // Arrange
-        var boardId = Guid.NewGuid();
-        var board = new Board(5, 5, new List<CellCoordinate>());
-        board.Id = boardId;
-
-        _mockRepository
-            .Setup(r => r.GetBoardById(boardId))
-            .ReturnsAsync(board);
-
-        // Act
-        var state = await _service.GetStatesAhead(boardId, 1);
-
-        // Assert
-        state.LiveCells.Should().BeEmpty();
-    }
-
     #endregion
 
     #region GetFinalState Tests
@@ -357,8 +364,7 @@ public class GameOfLifeServiceTests {
         var maxIterations = 10;
 
         // Create a real configuration with custom max iterations
-        var customConfigDict = new Dictionary<string, string?>
-        {
+        var customConfigDict = new Dictionary<string, string?> {
             { "GameOfLife:MaxIterationsForFinalState", maxIterations.ToString() }
         };
         

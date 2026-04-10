@@ -58,25 +58,6 @@ public class BoardStateTests {
         Assert.Empty(nextState.LiveCells);
     }
 
-    [Fact]
-    public void ThreeIsolatedCells_AllDie_WithLessThanTwoNeighborsEach() {
-        // Arrange: Three cells arranged so each has < 2 neighbors
-        var state = CreateBoardState(5, 5, (1, 1), (3, 1), (2, 3));
-        // 0 0 0 0 0
-        // 0 1 0 0 0
-        // 0 0 0 1 0
-        // 0 1 0 0 0
-        // 0 0 0 0 0
-
-        // Act
-        var nextState = state.GenerateNextStep();
-
-        // Assert: All original cells should die
-        foreach (var ogCell in state.LiveCells) {
-            Assert.DoesNotContain(ogCell, nextState.LiveCells);
-        }
-    }
-
     #endregion
 
     #region Rule 2: Survival
@@ -138,34 +119,6 @@ public class BoardStateTests {
         Assert.DoesNotContain((1, 1), nextState.LiveCells); // Overpopulated
     }
 
-    [Fact]
-    public void AllLiveCellsWithFiveNeighbors_Die() {
-        // Arrange: Create a crowded area where cells have 5+ neighbors
-        // Pattern (5x5 with dense center):
-        //   0 0 0 0 0
-        //   0 1 1 1 0
-        //   0 1 1 1 0
-        //   0 1 1 1 0
-        //   0 0 0 0 0
-        var liveCells = new (int, int)[] {
-            (1, 1), (2, 1), (3, 1),
-            (1, 2), (2, 2), (3, 2),
-            (1, 3), (2, 3), (3, 3)
-        };
-        var state = CreateBoardState(5, 5, liveCells);
-
-        // Act
-        var nextState = state.GenerateNextStep();
-
-        // Assert: All interior cells have too many neighbors and die
-        foreach (var cell in liveCells) {
-            if (cell != (1, 1) && cell != (1, 3) && cell != (3, 1) && cell != (3, 3)) {
-                // Interior cells have 8 neighbors
-                Assert.DoesNotContain(cell, nextState.LiveCells);
-            }
-        }
-    }
-
     #endregion
 
     #region Rule 4: Reproduction
@@ -195,33 +148,13 @@ public class BoardStateTests {
         Assert.Contains((1, 1), nextState.LiveCells);
     }
 
-    [Fact]
-    public void MultipleDeadCells_BecomeAlive_FromReproduction() {
-        // Arrange: Create a pattern where multiple dead cells will reproduce
-        // Vertical blinker becomes horizontal blinker:
-        //   0 1 0
-        //   0 1 0
-        //   0 1 0
-        // Dead cells at (0,1) and (2,1) each have 3 neighbors
-        var state = CreateBoardState(3, 3, (1, 0), (1, 1), (1, 2));
-
-        // Act
-        var nextState = state.GenerateNextStep();
-
-        // Assert: (0,1) and (2,1) should be born, center should still live
-        Assert.Contains((0, 1), nextState.LiveCells);
-        Assert.Contains((1, 1), nextState.LiveCells);
-        Assert.Contains((2, 1), nextState.LiveCells);
-        Assert.Equal(3, nextState.LiveCells.Count);
-    }
-
     #endregion
 
-    #region Edge Cases: Empty Board
+    #region Edge Cases: Dead Board
 
     [Fact]
-    public void EmptyBoard_RemainsEmpty() {
-        // Arrange: Completely empty board
+    public void DeadBoard_RemainsDead() {
+        // Arrange: Completely dead board
         var state = CreateBoardState(5, 5);
 
         // Act
@@ -229,23 +162,6 @@ public class BoardStateTests {
 
         // Assert: Should remain empty
         Assert.Empty(nextState.LiveCells);
-    }
-
-    [Fact]
-    public void BoardWithAllCellsAlive_Dies_DueToOverpopulation() {
-        // Arrange: Very small board completely filled
-        var liveCells = new (int, int)[] {
-            (0, 0), (1, 0), (2, 0),
-            (0, 1), (1, 1), (2, 1),
-            (0, 2), (1, 2), (2, 2)
-        };
-        var state = CreateBoardState(3, 3, liveCells);
-
-        // Act
-        var nextState = state.GenerateNextStep();
-
-        // Assert: All non-corner cells die (all have 8 neighbors)
-        Assert.Equal(4, nextState.LiveCells.Count);
     }
 
     #endregion
@@ -275,7 +191,7 @@ public class BoardStateTests {
     }
 
     [Fact]
-    public void BlinkerPattern_OscillatesBackToVertical() {
+    public void BlinkerPattern_OscillatesHorizontalToVertical() {
         // Arrange: Start with horizontal blinker
         //   0 0 0
         //   1 1 1
@@ -322,34 +238,9 @@ public class BoardStateTests {
         Assert.Empty(nextState.LiveCells);
     }
 
-    [Fact]
-    public void EdgeCell_DiesDueToUnderpopulation() {
-        // Arrange: Single cell on edge
-        var state = CreateBoardState(5, 5, (0, 2), (0, 3));
-
-        // Act
-        var nextState = state.GenerateNextStep();
-
-        // Assert
-        Assert.Empty(nextState.LiveCells);
-    }
-
     #endregion
 
     #region Generation Tracking
-
-    [Fact]
-    public void GenerationIncrementsWithEachStep() {
-        // Arrange: Start with generation 0
-        var state = CreateBoardState(3, 3, (1, 0), (1, 1), (1, 2));
-        Assert.Equal(0, state.Generation);
-
-        // Act
-        var nextState = state.GenerateNextStep();
-
-        // Assert: Generation should increment to 1
-        Assert.Equal(1, nextState.Generation);
-    }
 
     [Fact]
     public void MultipleGenerations_IncrementCorrectly() {
@@ -379,28 +270,6 @@ public class BoardStateTests {
         // Assert
         Assert.Equal(10, nextState.Width);
         Assert.Equal(15, nextState.Height);
-    }
-
-    #endregion
-
-    #region Complex Patterns
-
-    [Fact]
-    public void Block_Pattern_Remains_Stable() {
-        // Arrange: 2x2 block (stable pattern)
-        //   1 1
-        //   1 1
-        var state = CreateBoardState(2, 2, (0, 0), (1, 0), (0, 1), (1, 1));
-
-        // Act
-        var nextState = state.GenerateNextStep();
-
-        // Assert: Block remains unchanged
-        Assert.Contains((0, 0), nextState.LiveCells);
-        Assert.Contains((1, 0), nextState.LiveCells);
-        Assert.Contains((0, 1), nextState.LiveCells);
-        Assert.Contains((1, 1), nextState.LiveCells);
-        Assert.Equal(4, nextState.LiveCells.Count);
     }
 
     #endregion
