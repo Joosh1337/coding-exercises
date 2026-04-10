@@ -40,11 +40,16 @@ public class LiteBoardRepository : IBoardRepository {
     }
 
     /// <summary>
-    /// Retrieves all boards.
+    /// Retrieves all boards within the paging parameters
     /// </summary>
-    /// <returns>A list of all saved boards.</returns>
-    public List<Board> GetAllBoards() {
-        return _database.GetCollection<Board>(CollectionName).FindAll().ToList();
+    /// <returns>A list of all saved boards within the paging parameters.</returns>
+    public List<Board> GetBoards(int page, int pageSize) {
+        return _database.GetCollection<Board>(CollectionName)
+            .Query()
+            .OrderBy(x => x.Id)
+            .Skip((page - 1) * pageSize)
+            .Limit(pageSize)
+            .ToList();
     }
 
     /// <summary>

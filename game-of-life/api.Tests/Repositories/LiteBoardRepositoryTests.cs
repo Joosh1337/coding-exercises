@@ -125,6 +125,62 @@ public class LiteBoardRepositoryTests : IDisposable {
     #region Read Tests
 
     [Fact]
+    public async Task GetBoards_ReturnsBoardAfterCreation() {
+        // Arrange
+        var board = CreateTestBoard();
+        var savedBoard = _repository!.CreateBoard(board);
+
+        // Act
+        var retrievedBoard = _repository.GetBoards(1, 1)[0];
+
+        // Assert
+        Assert.NotNull(retrievedBoard);
+        Assert.Equal(savedBoard.Id, retrievedBoard!.Id);
+        Assert.Equal(savedBoard.Width, retrievedBoard.Width);
+        Assert.Equal(savedBoard.Height, retrievedBoard.Height);
+        Assert.Equal(savedBoard.LiveCells.Count, retrievedBoard.LiveCells.Count);
+    }
+
+    [Fact]
+    public async Task GetBoards_ReturnsBoardOnSecondPageAfterCreation() {
+        // Arrange
+        var firstSavedBoard = _repository!.CreateBoard(CreateTestBoard());
+        var secondSavedBoard = _repository!.CreateBoard(CreateTestBoard());
+
+        // Act
+        var retrievedBoard = _repository.GetBoards(2, 1)[0];
+
+        // Assert
+        Assert.NotNull(retrievedBoard);
+        Assert.Contains(retrievedBoard!.Id, new List<Guid>() { firstSavedBoard.Id, secondSavedBoard.Id });
+        Assert.Contains(retrievedBoard.Width, new List<int>() { firstSavedBoard.Width, secondSavedBoard.Width });
+        Assert.Contains(retrievedBoard.Height, new List<int>() { firstSavedBoard.Height, secondSavedBoard.Height });
+        Assert.Contains(retrievedBoard.LiveCells.Count, new List<int>() { firstSavedBoard.LiveCells.Count, secondSavedBoard.LiveCells.Count });
+    }
+
+    [Fact]
+    public async Task GetBoards_ReturnsMultipleBoardsOnPageAfterCreation() {
+        // Arrange
+        _repository!.CreateBoard(CreateTestBoard());
+        _repository!.CreateBoard(CreateTestBoard());
+
+        // Act
+        var retrievedBoardList = _repository.GetBoards(1, 2);
+
+        // Assert
+        Assert.True(retrievedBoardList.Count == 2);
+    }
+
+    [Fact]
+    public async Task GetBoards_ReturnsEmptyList_ForNonExistentBoard() {
+        // Act
+        var boardList = _repository!.GetBoards(1, 1);
+
+        // Assert
+        Assert.Empty(boardList);
+    }
+
+    [Fact]
     public async Task GetBoardById_ReturnsBoardAfterCreation() {
         // Arrange
         var board = CreateTestBoard();

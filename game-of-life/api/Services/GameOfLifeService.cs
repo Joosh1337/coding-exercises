@@ -52,10 +52,10 @@ public class GameOfLifeService : IGameOfLifeService {
     }
 
     /// <summary>
-    /// Retrieves all initial board states at generation 0.
+    /// Retrieves all initial board states within the paging parameters at generation 0.
     /// </summary>
-    public List<BoardState> GetAllBoardStates() {
-        var boards = _boardRepository.GetAllBoards();
+    public List<BoardState> GetBoardStates(int page, int pageSize) {
+        var boards = _boardRepository.GetBoards(page, pageSize);
         return boards.Select(x => new BoardState(x)).ToList();
     }
 

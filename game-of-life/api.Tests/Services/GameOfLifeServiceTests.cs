@@ -164,6 +164,46 @@ public class GameOfLifeServiceTests {
 
     #endregion
 
+    #region GetBoardStates Tests
+
+    [Fact]
+    public async Task GetBoardStates_WithExistingBoard_ReturnsInitialStates() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        var board = new Board(5, 5, new List<CellCoordinate> {
+            new CellCoordinate(0, 0),
+            new CellCoordinate(1, 1)
+        });
+        board.Id = boardId;
+
+        _mockRepository
+            .Setup(r => r.GetBoards(1, 1))
+            .Returns(new List<Board>() { board });
+
+        // Act
+        var state = _service.GetBoardStates(1, 1);
+
+        // Assert
+        state.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task GetBoardState_WithNonExistentBoard_ReturnsEmptyList() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        _mockRepository
+            .Setup(r => r.GetBoards(1, 1))
+            .Returns(new List<Board>() { });
+
+        // Act
+        var state = _service.GetBoardStates(1, 1);
+
+        // Assert
+        state.Should().BeEmpty();
+    }
+
+    #endregion
+
     #region GetBoardState Tests
 
     [Fact]

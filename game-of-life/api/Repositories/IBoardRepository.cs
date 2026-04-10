@@ -15,10 +15,10 @@ public interface IBoardRepository {
     Board CreateBoard(Board board);
 
     /// <summary>
-    /// Retrieves all boards.
+    /// Retrieves all boards within the paging parameters.
     /// </summary>
-    /// <returns>All boards</returns>
-    List<Board> GetAllBoards();
+    /// <returns>All boards within the paging parameters</returns>
+    List<Board> GetBoards(int page, int pageSize);
 
     /// <summary>
     /// Retrieves a board by its unique identifier.

@@ -17,10 +17,10 @@ public interface IGameOfLifeService {
     Guid CreateBoard(int width, int height, int[][] initialCells);
 
     /// <summary>
-    /// Retrieves all initial board states at generation 0.
+    /// Retrieves all initial board states within the paging parameters at generation 0.
     /// </summary>
-    /// <returns>A list of all board states at generation 0</returns>
-    List<BoardState> GetAllBoardStates();
+    /// <returns>A list of all board states within the paging parameters at generation 0</returns>
+    List<BoardState> GetBoardStates(int page, int pageSize);
 
     /// <summary>
     /// Retrieves the current board state at generation 0.

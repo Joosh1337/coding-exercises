@@ -174,10 +174,78 @@ public class BoardsControllerTests {
 
     #endregion
 
+    #region GetBoards Tests
+
+    [Fact]
+    public void GetBoards_WhenBoardExists_ReturnsOkWithBoards() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        var boardState = new BoardState {
+            Generation = 0,
+            Width = 2,
+            Height = 2,
+            LiveCells = new HashSet<(int x, int y)> { (0, 0), (1, 1) }
+        };
+
+        _mockGameOfLifeService
+            .Setup(s => s.GetBoardStates(1, 1))
+            .Returns(new List<BoardState>() { boardState });
+
+        var request = new PaginationDto {
+            Page = 1,
+            PageSize = 1
+        };
+
+        // Act
+        var result = _controller.GetBoards(request);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+        var okResult = result as OkObjectResult;
+        okResult?.StatusCode.Should().Be(200);
+
+        var response = okResult?.Value as SuccessResponse<List<BoardResponse>>;
+        response.Should().NotBeNull();
+        response?.Data.Count.Should().Be(1);
+        response?.Message.Should().Be("Board states retrieved successfully.");
+
+        _mockGameOfLifeService.Verify(s => s.GetBoardStates(request.Page, request.PageSize), Times.Once);
+    }
+
+    [Fact]
+    public void GetBoard_WhenBoardsEmpty_ReturnsOkWithNoBoards() {
+        // Arrange
+        _mockGameOfLifeService
+            .Setup(s => s.GetBoardStates(1, 1))
+            .Returns(new List<BoardState>() { });
+
+        var request = new PaginationDto {
+            Page = 1,
+            PageSize = 1
+        };
+
+        // Act
+        var result = _controller.GetBoards(request);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+        var okResult = result as OkObjectResult;
+        okResult?.StatusCode.Should().Be(200);
+
+        var response = okResult?.Value as SuccessResponse<List<BoardResponse>>;
+        response.Should().NotBeNull();
+        response?.Data.Count.Should().Be(0);
+        response?.Message.Should().Be("Board states retrieved successfully.");
+
+        _mockGameOfLifeService.Verify(s => s.GetBoardStates(request.Page, request.PageSize), Times.Once);
+    }
+
+    #endregion
+    
     #region GetBoard Tests
 
     [Fact]
-    public void GetBoard_WithValidBoardId_ReturnsOkWithBoardState() {
+    public void GetBoard_WithValidBoardId_ReturnsOkWithBoards() {
         // Arrange
         var boardId = Guid.NewGuid();
         var boardState = new BoardState {

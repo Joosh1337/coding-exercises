@@ -46,12 +46,12 @@ public class BoardsController : ControllerBase {
 
     [HttpGet]
     /// <summary>
-    /// Retrieves all initial board states (generation 0).
+    /// Retrieves all initial board states within the paging parameters (generation 0).
     /// </summary>
-    public IActionResult GetAllBoards() {
+    public IActionResult GetBoards(PaginationDto request) {
         try {
             var responseList = new List<BoardResponse>();
-            var boardStates = _gameOfLifeService.GetAllBoardStates();
+            var boardStates = _gameOfLifeService.GetBoardStates(request.Page, request.PageSize);
             foreach (var boardState in boardStates) {
                 responseList.Add(BoardResponse.FromBoardState(boardState));
             }

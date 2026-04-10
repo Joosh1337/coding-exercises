@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace api.Dtos;
 
 /// <summary>
@@ -59,16 +61,19 @@ public class BoardResponse {
     /// <summary>
     /// The current generation number.
     /// </summary>
+    [Range(1, int.MaxValue)]
     public int Generation { get; set; }
 
     /// <summary>
     /// The width of the board.
     /// </summary>
+    [Range(1, int.MaxValue)]
     public int Width { get; set; }
 
     /// <summary>
     /// The height of the board.
     /// </summary>
+    [Range(1, int.MaxValue)]
     public int Height { get; set; }
 
     /// <summary>
@@ -115,16 +120,19 @@ public class BoardRepresentationResponse {
     /// <summary>
     /// The current generation number.
     /// </summary>
+    [Range(1, int.MaxValue)]
     public int Generation { get; set; }
 
     /// <summary>
     /// The width of the board.
     /// </summary>
+    [Range(1, int.MaxValue)]
     public int Width { get; set; }
 
     /// <summary>
     /// The height of the board.
     /// </summary>
+    [Range(1, int.MaxValue)]
     public int Height { get; set; }
 
     /// <summary>
@@ -162,11 +170,13 @@ public class CreateBoardDto {
     /// <summary>
     /// The width of the board (must be > 0).
     /// </summary>
+    [Range(1, int.MaxValue)]
     public int Width { get; set; }
 
     /// <summary>
     /// The height of the board (must be > 0).
     /// </summary>
+    [Range(1, int.MaxValue)]
     public int Height { get; set; }
 
     /// <summary>
@@ -187,4 +197,21 @@ public class CreateBoardResponse {
     public CreateBoardResponse(Guid id) {
         Id = id;
     }
+}
+
+/// <summary>
+/// Response DTO for board creation containing the new board ID.
+/// </summary>
+public class PaginationDto {
+    /// <summary>
+    /// The page number
+    /// </summary>
+    [Range(1, int.MaxValue)]
+    public int Page { get; set; } = 1;
+
+    /// <summary>
+    /// The size of the page
+    /// </summary>
+    [Range(1, 100)]
+    public int PageSize { get; set; } = 10;
 }
