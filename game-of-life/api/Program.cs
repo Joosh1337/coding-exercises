@@ -1,8 +1,8 @@
 using LiteDB;
 using api.Repositories;
-using Api.Services;
-using Api.Dtos;
-using Api.Exceptions;
+using api.Services;
+using api.Dtos;
+using api.Exceptions;
 
 var builder = WebApplication.CreateBuilder(args);
 

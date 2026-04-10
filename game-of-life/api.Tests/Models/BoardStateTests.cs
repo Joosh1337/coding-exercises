@@ -1,7 +1,6 @@
-using Xunit;
 using api.Models;
 
-namespace Api.Tests.Models;
+namespace api.Tests.Models;
 
 public class BoardStateTests {
     /// <summary>

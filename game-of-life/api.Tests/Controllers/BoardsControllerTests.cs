@@ -1,12 +1,11 @@
-using Api.Controllers;
-using Api.Dtos;
-using Api.Exceptions;
-using Api.Services;
+using api.Controllers;
+using api.Dtos;
+using api.Exceptions;
+using api.Services;
 using api.Models;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using Xunit;
 using Microsoft.Extensions.Logging;
 
 namespace api.Tests.Controllers;
@@ -29,7 +28,7 @@ public class BoardsControllerTests {
     #region CreateBoard Tests
 
     [Fact]
-    public async Task CreateBoard_WithValidRequest_ReturnsOkWithBoardId() {
+    public void CreateBoard_WithValidRequest_ReturnsOkWithBoardId() {
         // Arrange
         var boardId = Guid.NewGuid();
         var request = new CreateBoardDto {
@@ -40,10 +39,10 @@ public class BoardsControllerTests {
 
         _mockGameOfLifeService
             .Setup(s => s.CreateBoard(request.Width, request.Height, request.InitialCells))
-            .ReturnsAsync(boardId);
+            .Returns(boardId);
 
         // Act
-        var result = await _controller.CreateBoard(request);
+        var result = _controller.CreateBoard(request);
 
         // Assert
         result.Should().BeOfType<OkObjectResult>();
@@ -61,9 +60,9 @@ public class BoardsControllerTests {
     }
 
     [Fact]
-    public async Task CreateBoard_WithNullRequest_ReturnsBadRequest() {
+    public void CreateBoard_WithNullRequest_ReturnsBadRequest() {
         // Act
-        var result = await _controller.CreateBoard(null!);
+        var result = _controller.CreateBoard(null!);
 
         // Assert
         result.Should().BeOfType<BadRequestObjectResult>();
@@ -76,7 +75,7 @@ public class BoardsControllerTests {
     }
 
     [Fact]
-    public async Task CreateBoard_WithNullInitialCells_ReturnsBadRequest() {
+    public void CreateBoard_WithNullInitialCells_ReturnsBadRequest() {
         // Arrange
         var request = new CreateBoardDto {
             Width = 10,
@@ -85,7 +84,7 @@ public class BoardsControllerTests {
         };
 
         // Act
-        var result = await _controller.CreateBoard(request);
+        var result = _controller.CreateBoard(request);
 
         // Assert
         result.Should().BeOfType<BadRequestObjectResult>();
@@ -97,7 +96,7 @@ public class BoardsControllerTests {
     }
 
     [Fact]
-    public async Task CreateBoard_WhenServiceThrowsInvalidBoardStateException_ReturnsBadRequest() {
+    public void CreateBoard_WhenServiceThrowsInvalidBoardStateException_ReturnsBadRequest() {
         // Arrange
         var request = new CreateBoardDto {
             Width = -1,
@@ -108,10 +107,10 @@ public class BoardsControllerTests {
 
         _mockGameOfLifeService
             .Setup(s => s.CreateBoard(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int[][]>()))
-            .ThrowsAsync(new InvalidBoardStateException(exceptionMessage));
+            .Throws(new InvalidBoardStateException(exceptionMessage));
 
         // Act
-        var result = await _controller.CreateBoard(request);
+        var result = _controller.CreateBoard(request);
 
         // Assert
         result.Should().BeOfType<BadRequestObjectResult>();
@@ -124,7 +123,7 @@ public class BoardsControllerTests {
     }
 
     [Fact]
-    public async Task CreateBoard_WhenServiceThrowsGenericException_Returns500InternalServerError() {
+    public void CreateBoard_WhenServiceThrowsGenericException_Returns500InternalServerError() {
         // Arrange
         var request = new CreateBoardDto {
             Width = 2,
@@ -134,10 +133,10 @@ public class BoardsControllerTests {
 
         _mockGameOfLifeService
             .Setup(s => s.CreateBoard(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int[][]>()))
-            .ThrowsAsync(new Exception("Unexpected error"));
+            .Throws(new Exception("Unexpected error"));
 
         // Act
-        var result = await _controller.CreateBoard(request);
+        var result = _controller.CreateBoard(request);
 
         // Assert
         result.Should().BeOfType<ObjectResult>();
@@ -150,7 +149,7 @@ public class BoardsControllerTests {
     }
 
     [Fact]
-    public async Task CreateBoard_WithEmptyInitialCells_ReturnsOkWithBoardId() {
+    public void CreateBoard_WithEmptyInitialCells_ReturnsOkWithBoardId() {
         // Arrange
         var boardId = Guid.NewGuid();
         var request = new CreateBoardDto {
@@ -161,10 +160,10 @@ public class BoardsControllerTests {
 
         _mockGameOfLifeService
             .Setup(s => s.CreateBoard(request.Width, request.Height, request.InitialCells))
-            .ReturnsAsync(boardId);
+            .Returns(boardId);
 
         // Act
-        var result = await _controller.CreateBoard(request);
+        var result = _controller.CreateBoard(request);
 
         // Assert
         result.Should().BeOfType<OkObjectResult>();
@@ -178,7 +177,7 @@ public class BoardsControllerTests {
     #region GetBoard Tests
 
     [Fact]
-    public async Task GetBoard_WithValidBoardId_ReturnsOkWithBoardState() {
+    public void GetBoard_WithValidBoardId_ReturnsOkWithBoardState() {
         // Arrange
         var boardId = Guid.NewGuid();
         var boardState = new BoardState {
@@ -190,10 +189,10 @@ public class BoardsControllerTests {
 
         _mockGameOfLifeService
             .Setup(s => s.GetBoardState(boardId))
-            .ReturnsAsync(boardState);
+            .Returns(boardState);
 
         // Act
-        var result = await _controller.GetBoard(boardId);
+        var result = _controller.GetBoard(boardId);
 
         // Assert
         result.Should().BeOfType<OkObjectResult>();
@@ -211,16 +210,16 @@ public class BoardsControllerTests {
     }
 
     [Fact]
-    public async Task GetBoard_WhenBoardNotFound_ReturnsNotFound() {
+    public void GetBoard_WhenBoardNotFound_ReturnsNotFound() {
         // Arrange
         var boardId = Guid.NewGuid();
 
         _mockGameOfLifeService
             .Setup(s => s.GetBoardState(boardId))
-            .ThrowsAsync(new BoardNotFoundException(boardId));
+            .Throws(new BoardNotFoundException(boardId));
 
         // Act
-        var result = await _controller.GetBoard(boardId);
+        var result = _controller.GetBoard(boardId);
 
         // Assert
         result.Should().BeOfType<NotFoundObjectResult>();
@@ -237,7 +236,7 @@ public class BoardsControllerTests {
     #region GetNextState Tests
 
     [Fact]
-    public async Task GetNextState_WithValidBoardId_ReturnsOkWithNextGeneration() {
+    public void GetNextState_WithValidBoardId_ReturnsOkWithNextGeneration() {
         // Arrange
         var boardId = Guid.NewGuid();
         var boardState = new BoardState {
@@ -249,10 +248,10 @@ public class BoardsControllerTests {
 
         _mockGameOfLifeService
             .Setup(s => s.GetStatesAhead(boardId, 1))
-            .ReturnsAsync(boardState);
+            .Returns(boardState);
 
         // Act
-        var result = await _controller.GetNextState(boardId);
+        var result = _controller.GetNextState(boardId);
 
         // Assert
         result.Should().BeOfType<OkObjectResult>();
@@ -268,16 +267,16 @@ public class BoardsControllerTests {
     }
 
     [Fact]
-    public async Task GetNextState_WhenBoardNotFound_ReturnsNotFound() {
+    public void GetNextState_WhenBoardNotFound_ReturnsNotFound() {
         // Arrange
         var boardId = Guid.NewGuid();
 
         _mockGameOfLifeService
             .Setup(s => s.GetStatesAhead(boardId, 1))
-            .ThrowsAsync(new BoardNotFoundException(boardId));
+            .Throws(new BoardNotFoundException(boardId));
 
         // Act
-        var result = await _controller.GetNextState(boardId);
+        var result = _controller.GetNextState(boardId);
 
         // Assert
         result.Should().BeOfType<NotFoundObjectResult>();
@@ -293,7 +292,7 @@ public class BoardsControllerTests {
     #region GetStatesAhead Tests
 
     [Fact]
-    public async Task GetStatesAhead_WithValidSteps_ReturnsOkWithBoardState() {
+    public void GetStatesAhead_WithValidSteps_ReturnsOkWithBoardState() {
         // Arrange
         var boardId = Guid.NewGuid();
         var steps = 5;
@@ -306,10 +305,10 @@ public class BoardsControllerTests {
 
         _mockGameOfLifeService
             .Setup(s => s.GetStatesAhead(boardId, steps))
-            .ReturnsAsync(boardState);
+            .Returns(boardState);
 
         // Act
-        var result = await _controller.GetStatesAhead(boardId, steps);
+        var result = _controller.GetStatesAhead(boardId, steps);
 
         // Assert
         result.Should().BeOfType<OkObjectResult>();
@@ -325,13 +324,13 @@ public class BoardsControllerTests {
     }
 
     [Fact]
-    public async Task GetStatesAhead_WithZeroSteps_ReturnsBadRequest() {
+    public void GetStatesAhead_WithZeroSteps_ReturnsBadRequest() {
         // Arrange
         var boardId = Guid.NewGuid();
         var steps = 0;
 
         // Act
-        var result = await _controller.GetStatesAhead(boardId, steps);
+        var result = _controller.GetStatesAhead(boardId, steps);
 
         // Assert
         result.Should().BeOfType<BadRequestObjectResult>();
@@ -347,13 +346,13 @@ public class BoardsControllerTests {
     }
 
     [Fact]
-    public async Task GetStatesAhead_WithNegativeSteps_ReturnsBadRequest() {
+    public void GetStatesAhead_WithNegativeSteps_ReturnsBadRequest() {
         // Arrange
         var boardId = Guid.NewGuid();
         var steps = -5;
 
         // Act
-        var result = await _controller.GetStatesAhead(boardId, steps);
+        var result = _controller.GetStatesAhead(boardId, steps);
 
         // Assert
         result.Should().BeOfType<BadRequestObjectResult>();
@@ -367,17 +366,17 @@ public class BoardsControllerTests {
     }
 
     [Fact]
-    public async Task GetStatesAhead_WithBoardNotFound_ReturnsNotFound() {
+    public void GetStatesAhead_WithBoardNotFound_ReturnsNotFound() {
         // Arrange
         var boardId = Guid.NewGuid();
         var steps = 3;
 
         _mockGameOfLifeService
             .Setup(s => s.GetStatesAhead(boardId, steps))
-            .ThrowsAsync(new BoardNotFoundException(boardId));
+            .Throws(new BoardNotFoundException(boardId));
 
         // Act
-        var result = await _controller.GetStatesAhead(boardId, steps);
+        var result = _controller.GetStatesAhead(boardId, steps);
 
         // Assert
         result.Should().BeOfType<NotFoundObjectResult>();
@@ -393,7 +392,7 @@ public class BoardsControllerTests {
     #region GetFinalState Tests
 
     [Fact]
-    public async Task GetFinalState_WithValidBoardId_ReturnsOkWithFinalState() {
+    public void GetFinalState_WithValidBoardId_ReturnsOkWithFinalState() {
         // Arrange
         var boardId = Guid.NewGuid();
         var boardState = new BoardState {
@@ -405,10 +404,10 @@ public class BoardsControllerTests {
 
         _mockGameOfLifeService
             .Setup(s => s.GetFinalState(boardId))
-            .ReturnsAsync(boardState);
+            .Returns(boardState);
 
         // Act
-        var result = await _controller.GetFinalState(boardId);
+        var result = _controller.GetFinalState(boardId);
 
         // Assert
         result.Should().BeOfType<OkObjectResult>();
@@ -423,16 +422,16 @@ public class BoardsControllerTests {
     }
 
     [Fact]
-    public async Task GetFinalState_WhenBoardNotFound_ReturnsNotFound() {
+    public void GetFinalState_WhenBoardNotFound_ReturnsNotFound() {
         // Arrange
         var boardId = Guid.NewGuid();
 
         _mockGameOfLifeService
             .Setup(s => s.GetFinalState(boardId))
-            .ThrowsAsync(new BoardNotFoundException(boardId));
+            .Throws(new BoardNotFoundException(boardId));
 
         // Act
-        var result = await _controller.GetFinalState(boardId);
+        var result = _controller.GetFinalState(boardId);
 
         // Assert
         result.Should().BeOfType<NotFoundObjectResult>();
@@ -444,17 +443,17 @@ public class BoardsControllerTests {
     }
 
     [Fact]
-    public async Task GetFinalState_WhenNoFinalStateFound_ReturnsUnprocessableEntity() {
+    public void GetFinalState_WhenNoFinalStateFound_ReturnsUnprocessableEntity() {
         // Arrange
         var boardId = Guid.NewGuid();
         var maxIterations = 1000;
 
         _mockGameOfLifeService
             .Setup(s => s.GetFinalState(boardId))
-            .ThrowsAsync(new NoFinalStateException(maxIterations));
+            .Throws(new NoFinalStateException(maxIterations));
 
         // Act
-        var result = await _controller.GetFinalState(boardId);
+        var result = _controller.GetFinalState(boardId);
 
         // Assert
         result.Should().BeOfType<ObjectResult>();
@@ -472,16 +471,16 @@ public class BoardsControllerTests {
     #region DeleteBoard Tests
 
     [Fact]
-    public async Task DeleteBoard_WithValidBoardId_ReturnsNoContent() {
+    public void DeleteBoard_WithValidBoardId_ReturnsNoContent() {
         // Arrange
         var boardId = Guid.NewGuid();
 
         _mockGameOfLifeService
             .Setup(s => s.DeleteBoard(boardId))
-            .ReturnsAsync(true);
+            .Returns(true);
 
         // Act
-        var result = await _controller.DeleteBoard(boardId);
+        var result = _controller.DeleteBoard(boardId);
 
         // Assert
         result.Should().BeOfType<NoContentResult>();
@@ -492,38 +491,34 @@ public class BoardsControllerTests {
     }
 
     [Fact]
-    public async Task DeleteBoard_WhenBoardNotFound_ReturnsNotFound() {
+    public void DeleteBoard_WhenBoardNotFound_ReturnsNoContent() {
         // Arrange
         var boardId = Guid.NewGuid();
 
         _mockGameOfLifeService
             .Setup(s => s.DeleteBoard(boardId))
-            .ReturnsAsync(false);
+            .Returns(false);
 
         // Act
-        var result = await _controller.DeleteBoard(boardId);
+        var result = _controller.DeleteBoard(boardId);
 
         // Assert
-        result.Should().BeOfType<NotFoundObjectResult>();
-        var notFoundResult = result as NotFoundObjectResult;
-        notFoundResult?.StatusCode.Should().Be(404);
-
-        var response = notFoundResult?.Value as ErrorResponse;
-        response?.ErrorCode.Should().Be(404);
-        response?.Message.Should().Contain(boardId.ToString());
+        result.Should().BeOfType<NoContentResult>();
+        var notFoundResult = result as NoContentResult;
+        notFoundResult?.StatusCode.Should().Be(204);
     }
 
     [Fact]
-    public async Task DeleteBoard_WhenServiceThrowsException_Returns500InternalServerError() {
+    public void DeleteBoard_WhenServiceThrowsException_Returns500InternalServerError() {
         // Arrange
         var boardId = Guid.NewGuid();
 
         _mockGameOfLifeService
             .Setup(s => s.DeleteBoard(boardId))
-            .ThrowsAsync(new Exception("Database connection failed"));
+            .Throws(new Exception("Database connection failed"));
 
         // Act
-        var result = await _controller.DeleteBoard(boardId);
+        var result = _controller.DeleteBoard(boardId);
 
         // Assert
         result.Should().BeOfType<ObjectResult>();

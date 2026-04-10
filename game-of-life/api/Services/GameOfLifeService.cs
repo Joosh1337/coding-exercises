@@ -1,8 +1,8 @@
-using Api.Exceptions;
+using api.Exceptions;
 using api.Models;
 using api.Repositories;
 
-namespace Api.Services;
+namespace api.Services;
 
 /// <summary>
 /// Implements the Game of Life business logic service.
@@ -24,8 +24,8 @@ public class GameOfLifeService : IGameOfLifeService {
     /// <summary>
     /// Helper method to retrieve a board from the repository or throw if not found.
     /// </summary>
-    private async Task<Board> GetBoardOrThrow(Guid boardId) {
-        var board = await _boardRepository.GetBoardById(boardId);
+    private Board GetBoardOrThrow(Guid boardId) {
+        var board = _boardRepository.GetBoardById(boardId);
         if (board == null)
             throw new BoardNotFoundException(boardId);
         return board;
@@ -34,7 +34,7 @@ public class GameOfLifeService : IGameOfLifeService {
     /// <summary>
     /// Creates a new board with the specified dimensions and initial live cells.
     /// </summary>
-    public async Task<Guid> CreateBoard(int width, int height, int[][] initialCells) {
+    public Guid CreateBoard(int width, int height, int[][] initialCells) {
         try {
             // Convert array format to CellCoordinate list
             var cellCoordinates = ConvertArrayToCellCoordinates(width, height, initialCells);
@@ -43,7 +43,7 @@ public class GameOfLifeService : IGameOfLifeService {
             var board = new Board(width, height, cellCoordinates);
             
             // Persist the board
-            var createdBoard = await _boardRepository.CreateBoard(board);
+            var createdBoard = _boardRepository.CreateBoard(board);
             return createdBoard.Id;
         } catch (ArgumentException ex) {
             // Convert ArgumentException to InvalidBoardStateException for consistent service contract
@@ -52,21 +52,29 @@ public class GameOfLifeService : IGameOfLifeService {
     }
 
     /// <summary>
+    /// Retrieves all initial board states at generation 0.
+    /// </summary>
+    public List<BoardState> GetAllBoardStates() {
+        var boards = _boardRepository.GetAllBoards();
+        return boards.Select(x => new BoardState(x)).ToList();
+    }
+
+    /// <summary>
     /// Retrieves the current board state at generation 0.
     /// </summary>
-    public async Task<BoardState> GetBoardState(Guid boardId) {
-        var board = await GetBoardOrThrow(boardId);
+    public BoardState GetBoardState(Guid boardId) {
+        var board = GetBoardOrThrow(boardId);
         return new BoardState(board);
     }
 
     /// <summary>
     /// Computes the board state after a specified number of steps.
     /// </summary>
-    public async Task<BoardState> GetStatesAhead(Guid boardId, int steps) {
+    public BoardState GetStatesAhead(Guid boardId, int steps) {
         if (steps <= 0)
             throw new InvalidStepsException(steps);
 
-        var board = await GetBoardOrThrow(boardId);
+        var board = GetBoardOrThrow(boardId);
         var currentState = new BoardState(board);
 
         for (int i = 0; i < steps; i++) {
@@ -80,8 +88,8 @@ public class GameOfLifeService : IGameOfLifeService {
     /// Computes and returns the final stable state of the board.
     /// Iterates up to the configured maximum iterations to find a stable state.
     /// </summary>
-    public async Task<BoardState> GetFinalState(Guid boardId) {
-        var board = await GetBoardOrThrow(boardId);
+    public BoardState GetFinalState(Guid boardId) {
+        var board = GetBoardOrThrow(boardId);
         var currentState = new BoardState(board);
         var previousState = currentState;
 
@@ -104,8 +112,8 @@ public class GameOfLifeService : IGameOfLifeService {
     /// <summary>
     /// Deletes a board from persistence.
     /// </summary>
-    public async Task<bool> DeleteBoard(Guid boardId) {
-        return await _boardRepository.DeleteBoard(boardId);
+    public bool DeleteBoard(Guid boardId) {
+        return _boardRepository.DeleteBoard(boardId);
     }
 
     /// <summary>

@@ -1,12 +1,10 @@
-using Xunit;
 using Moq;
 using FluentAssertions;
 using api.Models;
 using api.Repositories;
-using Api.Services;
-using Api.Exceptions;
+using api.Services;
+using api.Exceptions;
 using Microsoft.Extensions.Configuration;
-using System.Collections.Generic;
 
 namespace api.Tests.Services;
 
@@ -48,13 +46,13 @@ public class GameOfLifeServiceTests {
 
         _mockRepository
             .Setup(r => r.CreateBoard(It.IsAny<Board>()))
-            .ReturnsAsync((Board board) => {
+            .Returns((Board board) => {
                 board.Id = expectedId;
                 return board;
             });
 
         // Act
-        var result = await _service.CreateBoard(width, height, initialCells);
+        var result = _service.CreateBoard(width, height, initialCells);
 
         // Assert
         result.Should().Be(expectedId);
@@ -68,7 +66,7 @@ public class GameOfLifeServiceTests {
         int[][] initialCells = Array.Empty<int[]>();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
+        Assert.Throws<InvalidBoardStateException>(() =>
             _service.CreateBoard(width, height, initialCells));
 
         _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
@@ -81,7 +79,7 @@ public class GameOfLifeServiceTests {
         int[][] initialCells = Array.Empty<int[]>();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
+        Assert.Throws<InvalidBoardStateException>(() =>
             _service.CreateBoard(width, height, initialCells));
 
         _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
@@ -98,7 +96,7 @@ public class GameOfLifeServiceTests {
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
+        Assert.Throws<InvalidBoardStateException>(() =>
             _service.CreateBoard(width, height, initialCells));
 
         _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
@@ -114,7 +112,7 @@ public class GameOfLifeServiceTests {
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
+        Assert.Throws<InvalidBoardStateException>(() =>
             _service.CreateBoard(width, height, initialCells));
 
         _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
@@ -129,7 +127,7 @@ public class GameOfLifeServiceTests {
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
+        Assert.Throws<InvalidBoardStateException>(() =>
             _service.CreateBoard(width, height, initialCells));
 
         _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
@@ -145,7 +143,7 @@ public class GameOfLifeServiceTests {
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
+        Assert.Throws<InvalidBoardStateException>(() =>
             _service.CreateBoard(width, height, initialCells));
 
         _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
@@ -158,7 +156,7 @@ public class GameOfLifeServiceTests {
         int[][] initialCells = Array.Empty<int[]>();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidBoardStateException>(() =>
+        Assert.Throws<InvalidBoardStateException>(() =>
             _service.CreateBoard(width, height, initialCells));
 
         _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
@@ -180,10 +178,10 @@ public class GameOfLifeServiceTests {
 
         _mockRepository
             .Setup(r => r.GetBoardById(boardId))
-            .ReturnsAsync(board);
+            .Returns(board);
 
         // Act
-        var state = await _service.GetBoardState(boardId);
+        var state = _service.GetBoardState(boardId);
 
         // Assert
         state.Should().NotBeNull();
@@ -199,10 +197,10 @@ public class GameOfLifeServiceTests {
         var boardId = Guid.NewGuid();
         _mockRepository
             .Setup(r => r.GetBoardById(boardId))
-            .ReturnsAsync((Board?)null);
+            .Returns((Board?)null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<BoardNotFoundException>(() =>
+        Assert.Throws<BoardNotFoundException>(() =>
             _service.GetBoardState(boardId));
     }
 
@@ -225,10 +223,10 @@ public class GameOfLifeServiceTests {
 
         _mockRepository
             .Setup(r => r.GetBoardById(boardId))
-            .ReturnsAsync(board);
+            .Returns(board);
 
         // Act
-        var state = await _service.GetStatesAhead(boardId, 1);
+        var state = _service.GetStatesAhead(boardId, 1);
 
         // Assert
         state.Should().NotBeNull();
@@ -250,10 +248,10 @@ public class GameOfLifeServiceTests {
 
         _mockRepository
             .Setup(r => r.GetBoardById(boardId))
-            .ReturnsAsync(board);
+            .Returns(board);
 
         // Act
-        var state = await _service.GetStatesAhead(boardId, 5);
+        var state = _service.GetStatesAhead(boardId, 5);
 
         // Assert
         state.Should().NotBeNull();
@@ -266,7 +264,7 @@ public class GameOfLifeServiceTests {
         var boardId = Guid.NewGuid();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidStepsException>(() =>
+        Assert.Throws<InvalidStepsException>(() =>
             _service.GetStatesAhead(boardId, 0));
 
         _mockRepository.Verify(r => r.GetBoardById(It.IsAny<Guid>()), Times.Never);
@@ -278,7 +276,7 @@ public class GameOfLifeServiceTests {
         var boardId = Guid.NewGuid();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidStepsException>(() =>
+        Assert.Throws<InvalidStepsException>(() =>
             _service.GetStatesAhead(boardId, -5));
 
         _mockRepository.Verify(r => r.GetBoardById(It.IsAny<Guid>()), Times.Never);
@@ -290,10 +288,10 @@ public class GameOfLifeServiceTests {
         var boardId = Guid.NewGuid();
         _mockRepository
             .Setup(r => r.GetBoardById(boardId))
-            .ReturnsAsync((Board?)null);
+            .Returns((Board?)null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<BoardNotFoundException>(() =>
+        Assert.Throws<BoardNotFoundException>(() =>
             _service.GetStatesAhead(boardId, 1));
     }
 
@@ -311,10 +309,10 @@ public class GameOfLifeServiceTests {
 
         _mockRepository
             .Setup(r => r.GetBoardById(boardId))
-            .ReturnsAsync(board);
+            .Returns(board);
 
         // Act
-        var finalState = await _service.GetFinalState(boardId);
+        var finalState = _service.GetFinalState(boardId);
 
         // Assert
         finalState.Should().NotBeNull();
@@ -336,10 +334,10 @@ public class GameOfLifeServiceTests {
 
         _mockRepository
             .Setup(r => r.GetBoardById(boardId))
-            .ReturnsAsync(board);
+            .Returns(board);
 
         // Act & Assert
-        await Assert.ThrowsAsync<NoFinalStateException>(() =>
+        Assert.Throws<NoFinalStateException>(() =>
             _service.GetFinalState(boardId));
     }
 
@@ -349,10 +347,10 @@ public class GameOfLifeServiceTests {
         var boardId = Guid.NewGuid();
         _mockRepository
             .Setup(r => r.GetBoardById(boardId))
-            .ReturnsAsync((Board?)null);
+            .Returns((Board?)null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<BoardNotFoundException>(() =>
+        Assert.Throws<BoardNotFoundException>(() =>
             _service.GetFinalState(boardId));
     }
 
@@ -391,10 +389,10 @@ public class GameOfLifeServiceTests {
 
         _mockRepository
             .Setup(r => r.GetBoardById(boardId))
-            .ReturnsAsync(board);
+            .Returns(board);
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<NoFinalStateException>(() =>
+        var exception = Assert.Throws<NoFinalStateException>(() =>
             service.GetFinalState(boardId));
 
         exception.Message.Should().Contain(maxIterations.ToString());
@@ -410,10 +408,10 @@ public class GameOfLifeServiceTests {
         var boardId = Guid.NewGuid();
         _mockRepository
             .Setup(r => r.DeleteBoard(boardId))
-            .ReturnsAsync(true);
+            .Returns(true);
 
         // Act
-        var result = await _service.DeleteBoard(boardId);
+        var result = _service.DeleteBoard(boardId);
 
         // Assert
         result.Should().BeTrue();
@@ -426,10 +424,10 @@ public class GameOfLifeServiceTests {
         var boardId = Guid.NewGuid();
         _mockRepository
             .Setup(r => r.DeleteBoard(boardId))
-            .ReturnsAsync(false);
+            .Returns(false);
 
         // Act
-        var result = await _service.DeleteBoard(boardId);
+        var result = _service.DeleteBoard(boardId);
 
         // Assert
         result.Should().BeFalse();
@@ -453,7 +451,7 @@ public class GameOfLifeServiceTests {
 
         _mockRepository
             .Setup(r => r.CreateBoard(It.IsAny<Board>()))
-            .ReturnsAsync((Board board) => {
+            .Returns((Board board) => {
                 board.Id = boardId;
                 return board;
             });
@@ -467,17 +465,17 @@ public class GameOfLifeServiceTests {
 
         _mockRepository
             .Setup(r => r.GetBoardById(boardId))
-            .ReturnsAsync(board);
+            .Returns(board);
 
         _mockRepository
             .Setup(r => r.DeleteBoard(boardId))
-            .ReturnsAsync(true);
+            .Returns(true);
 
         // Act
-        var createdId = await _service.CreateBoard(5, 5, initialCells);
-        var initialState = await _service.GetBoardState(createdId);
-        var nextState = await _service.GetStatesAhead(createdId, 1);
-        var deleteResult = await _service.DeleteBoard(createdId);
+        var createdId = _service.CreateBoard(5, 5, initialCells);
+        var initialState = _service.GetBoardState(createdId);
+        var nextState = _service.GetStatesAhead(createdId, 1);
+        var deleteResult = _service.DeleteBoard(createdId);
 
         // Assert
         createdId.Should().Be(boardId);

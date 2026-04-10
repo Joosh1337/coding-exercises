@@ -1,4 +1,4 @@
-namespace Api.Dtos;
+namespace api.Dtos;
 
 /// <summary>
 /// Generic success response wrapper for API responses.
@@ -52,6 +52,11 @@ public class ErrorResponse {
 /// </summary>
 public class BoardStateResponse {
     /// <summary>
+    /// Unique identifier for the board.
+    /// </summary>
+    public Guid Id { get; set; }
+
+    /// <summary>
     /// The current generation number.
     /// </summary>
     public int Generation { get; set; }
@@ -71,7 +76,8 @@ public class BoardStateResponse {
     /// </summary>
     public int[][] LiveCells { get; set; }
 
-    public BoardStateResponse(int generation, int width, int height, int[][] liveCells) {
+    public BoardStateResponse(Guid id, int generation, int width, int height, int[][] liveCells) {
+        Id = id;
         Generation = generation;
         Width = width;
         Height = height;
@@ -82,22 +88,16 @@ public class BoardStateResponse {
     /// Creates a BoardStateResponse from a BoardState domain model.
     /// </summary>
     public static BoardStateResponse FromBoardState(api.Models.BoardState boardState) {
-        var boardArray = boardState.GenerateBoardArray();
-        var liveCells = new List<int[]>();
-
-        for (int y = 0; y < boardArray.Length; y++) {
-            for (int x = 0; x < boardArray[y].Length; x++) {
-                if (boardArray[y][x] == 1) {
-                    liveCells.Add(new[] { x, y });
-                }
-            }
-        }
+        var liveCells = boardState.LiveCells
+            .Select(cell => new int[] { cell.x, cell.y })
+            .ToArray();
 
         return new BoardStateResponse(
+            boardState.Id,
             boardState.Generation,
             boardState.Width,
             boardState.Height,
-            liveCells.ToArray()
+            liveCells
         );
     }
 }

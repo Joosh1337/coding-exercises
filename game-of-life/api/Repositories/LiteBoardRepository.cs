@@ -28,18 +28,23 @@ public class LiteBoardRepository : IBoardRepository {
     /// </summary>
     /// <param name="board">The board entity to save.</param>
     /// <returns>The saved board with ID populated.</returns>
-    public async Task<Board> CreateBoard(Board board) {
+    public Board CreateBoard(Board board) {
         ArgumentNullException.ThrowIfNull(board);
 
         // Ensure the board has an ID
         if (board.Id == Guid.Empty)
             board.Id = Guid.NewGuid();
 
-        return await Task.Run(() => {
-            var collection = _database.GetCollection<Board>(CollectionName);
-            collection.Insert(board);
-            return board;
-        });
+        _database.GetCollection<Board>(CollectionName).Insert(board);
+        return board;
+    }
+
+    /// <summary>
+    /// Retrieves all boards.
+    /// </summary>
+    /// <returns>A list of all saved boards.</returns>
+    public List<Board> GetAllBoards() {
+        return _database.GetCollection<Board>(CollectionName).FindAll().ToList();
     }
 
     /// <summary>
@@ -47,11 +52,8 @@ public class LiteBoardRepository : IBoardRepository {
     /// </summary>
     /// <param name="id">The board's Guid.</param>
     /// <returns>The board if found; null otherwise.</returns>
-    public async Task<Board?> GetBoardById(Guid id) {
-        return await Task.Run(() => {
-            var collection = _database.GetCollection<Board>(CollectionName);
-            return collection.FindById(id);
-        });
+    public Board? GetBoardById(Guid id) {
+        return _database.GetCollection<Board>(CollectionName).FindById(id);
     }
 
     /// <summary>
@@ -59,11 +61,8 @@ public class LiteBoardRepository : IBoardRepository {
     /// </summary>
     /// <param name="id">The board's Guid.</param>
     /// <returns>True if the board was deleted; false if it was not found.</returns>
-    public async Task<bool> DeleteBoard(Guid id) {
-        return await Task.Run(() => {
-            var collection = _database.GetCollection<Board>(CollectionName);
-            return collection.DeleteMany(b => b.Id == id) > 0;
-        });
+    public bool DeleteBoard(Guid id) {
+        return _database.GetCollection<Board>(CollectionName).DeleteMany(b => b.Id == id) > 0;
     }
 
     /// <summary>
@@ -71,10 +70,7 @@ public class LiteBoardRepository : IBoardRepository {
     /// </summary>
     /// <param name="id">The board's Guid.</param>
     /// <returns>True if the board exists; false otherwise.</returns>
-    public async Task<bool> BoardExists(Guid id) {
-        return await Task.Run(() => {
-            var collection = _database.GetCollection<Board>(CollectionName);
-            return collection.Exists(b => b.Id == id);
-        });
+    public bool BoardExists(Guid id) {
+        return _database.GetCollection<Board>(CollectionName).Exists(b => b.Id == id);
     }
 }

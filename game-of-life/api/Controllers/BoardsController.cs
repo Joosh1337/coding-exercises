@@ -1,10 +1,10 @@
-using Api.Dtos;
-using Api.Exceptions;
-using Api.Services;
-using api.Models;
+using api.Dtos;
+using api.Exceptions;
+using api.Services;
+
 using Microsoft.AspNetCore.Mvc;
 
-namespace Api.Controllers;
+namespace api.Controllers;
 
 /// <summary>
 /// Controller for managing boards and computing Game of Life states.
@@ -24,12 +24,12 @@ public class BoardsController : ControllerBase {
     /// Creates a new board with the specified initial state.
     /// </summary>
     [HttpPost]
-    public async Task<IActionResult> CreateBoard([FromBody] CreateBoardDto request) {
+    public IActionResult CreateBoard([FromBody] CreateBoardDto request) {
         try {
             if (request == null || request.InitialCells == null)
                 return BadRequest(new ErrorResponse(400, "Invalid request: LiveCells array is required."));
 
-            var boardId = await _gameOfLifeService.CreateBoard(request.Width, request.Height, request.InitialCells);
+            var boardId = _gameOfLifeService.CreateBoard(request.Width, request.Height, request.InitialCells);
 
             return Ok(new SuccessResponse<CreateBoardResponse>(
                 new CreateBoardResponse(boardId),
@@ -44,13 +44,35 @@ public class BoardsController : ControllerBase {
         }
     }
 
+    [HttpGet]
+    /// <summary>
+    /// Retrieves all initial board states (generation 0).
+    /// </summary>
+    public IActionResult GetAllBoards() {
+        try {
+            var responseList = new List<BoardStateResponse>();
+            var boardStates = _gameOfLifeService.GetAllBoardStates();
+            foreach (var boardState in boardStates) {
+                responseList.Add(BoardStateResponse.FromBoardState(boardState));
+            }
+
+            return Ok(new SuccessResponse<List<BoardStateResponse>>(
+                responseList,
+                "Board states retrieved successfully."
+            ));
+        } catch (Exception ex) {
+            _logger.LogWarning("Issue retrieving board state list");
+            return NotFound(new ErrorResponse(500, ex.Message));
+        }
+    }
+
     /// <summary>
     /// Retrieves the initial board state (generation 0).
     /// </summary>
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetBoard(Guid id) {
+    public IActionResult GetBoard(Guid id) {
         try {
-            var boardState = await _gameOfLifeService.GetBoardState(id);
+            var boardState = _gameOfLifeService.GetBoardState(id);
             var response = BoardStateResponse.FromBoardState(boardState);
 
             return Ok(new SuccessResponse<BoardStateResponse>(
@@ -67,9 +89,9 @@ public class BoardsController : ControllerBase {
     /// Retrieves the next generation state of a board (generation + 1).
     /// </summary>
     [HttpGet("{id}/states/next")]
-    public async Task<IActionResult> GetNextState(Guid id) {
+    public IActionResult GetNextState(Guid id) {
         try {
-            var boardState = await _gameOfLifeService.GetStatesAhead(id, 1);
+            var boardState = _gameOfLifeService.GetStatesAhead(id, 1);
             var response = BoardRepresentationResponse.FromBoardState(boardState);
 
             return Ok(new SuccessResponse<BoardRepresentationResponse>(
@@ -86,12 +108,12 @@ public class BoardsController : ControllerBase {
     /// Retrieves the board state after a specified number of steps.
     /// </summary>
     [HttpGet("{id}/states")]
-    public async Task<IActionResult> GetStatesAhead(Guid id, [FromQuery] int steps) {
+    public IActionResult GetStatesAhead(Guid id, [FromQuery] int steps) {
         try {
             if (steps <= 0)
                 return BadRequest(new ErrorResponse(400, "Steps must be greater than 0.", new[] { $"Received steps: {steps}" }));
 
-            var boardState = await _gameOfLifeService.GetStatesAhead(id, steps);
+            var boardState = _gameOfLifeService.GetStatesAhead(id, steps);
             var response = BoardRepresentationResponse.FromBoardState(boardState);
 
             return Ok(new SuccessResponse<BoardRepresentationResponse>(
@@ -111,9 +133,9 @@ public class BoardsController : ControllerBase {
     /// Retrieves the final stable state of a board.
     /// </summary>
     [HttpGet("{id}/states/final")]
-    public async Task<IActionResult> GetFinalState(Guid id) {
+    public IActionResult GetFinalState(Guid id) {
         try {
-            var boardState = await _gameOfLifeService.GetFinalState(id);
+            var boardState = _gameOfLifeService.GetFinalState(id);
             var response = BoardRepresentationResponse.FromBoardState(boardState);
 
             return Ok(new SuccessResponse<BoardRepresentationResponse>(
@@ -133,16 +155,14 @@ public class BoardsController : ControllerBase {
     /// Deletes a board from the system.
     /// </summary>
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteBoard(Guid id) {
+    public IActionResult DeleteBoard(Guid id) {
         try {
-            var deleted = await _gameOfLifeService.DeleteBoard(id);
+            var deleted = _gameOfLifeService.DeleteBoard(id);
 
             if (!deleted) {
-                _logger.LogWarning("Board not found for deletion: {BoardId}", id);
-                return NotFound(new ErrorResponse(404, $"Board with ID '{id}' not found."));
+                _logger.LogInformation("Board deleted: {BoardId}", id);
             }
 
-            _logger.LogInformation("Board deleted: {BoardId}", id);
             return NoContent();
         } catch (Exception ex) {
             _logger.LogError(ex, "Error deleting board {BoardId}", id);

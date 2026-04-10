@@ -1,32 +1,29 @@
-using Xunit;
 using api.Models;
 using api.Repositories;
+
 using LiteDB;
 
-namespace Api.Tests.Repositories;
+namespace api.Tests.Repositories;
 
-public class LiteBoardRepositoryTests : IAsyncLifetime {
+public class LiteBoardRepositoryTests : IDisposable {
     private LiteDatabase? _database;
     private LiteBoardRepository? _repository;
     private string _testDbPath = null!;
 
-    public async Task InitializeAsync() {
+    public LiteBoardRepositoryTests() {
         // Setup: Create a temporary test database
         _testDbPath = Path.Combine(Path.GetTempPath(), $"test_game_of_life_{Guid.NewGuid()}.db");
         _database = new LiteDatabase(_testDbPath);
         _repository = new LiteBoardRepository(_database);
-        
-        await Task.CompletedTask;
     }
 
-    public async Task DisposeAsync() {
+    public void Dispose() {
         // Cleanup: Dispose database and delete test file
         _database?.Dispose();
+
         if (File.Exists(_testDbPath)) {
             File.Delete(_testDbPath);
         }
-        
-        await Task.CompletedTask;
     }
 
     private Board CreateTestBoard(int width = 5, int height = 5) {
@@ -47,7 +44,7 @@ public class LiteBoardRepositoryTests : IAsyncLifetime {
         var originalId = board.Id;
 
         // Act
-        var savedBoard = await _repository!.CreateBoard(board);
+        var savedBoard = _repository!.CreateBoard(board);
 
         // Assert
         Assert.NotNull(savedBoard);
@@ -70,7 +67,7 @@ public class LiteBoardRepositoryTests : IAsyncLifetime {
         };
 
         // Act
-        var savedBoard = await _repository!.CreateBoard(board);
+        var savedBoard = _repository!.CreateBoard(board);
 
         // Assert
         Assert.Equal(5, savedBoard.LiveCells.Count);
@@ -90,7 +87,7 @@ public class LiteBoardRepositoryTests : IAsyncLifetime {
         };
 
         // Act
-        var savedBoard = await _repository!.CreateBoard(board);
+        var savedBoard = _repository!.CreateBoard(board);
 
         // Assert
         Assert.Empty(savedBoard.LiveCells);
@@ -114,8 +111,8 @@ public class LiteBoardRepositoryTests : IAsyncLifetime {
         };
 
         // Act
-        var saved1 = await _repository!.CreateBoard(board1);
-        var saved2 = await _repository.CreateBoard(board2);
+        var saved1 = _repository!.CreateBoard(board1);
+        var saved2 = _repository.CreateBoard(board2);
 
         // Assert: Same data but different IDs
         Assert.NotEqual(saved1.Id, saved2.Id);
@@ -131,10 +128,10 @@ public class LiteBoardRepositoryTests : IAsyncLifetime {
     public async Task GetBoardById_ReturnsBoardAfterCreation() {
         // Arrange
         var board = CreateTestBoard();
-        var savedBoard = await _repository!.CreateBoard(board);
+        var savedBoard = _repository!.CreateBoard(board);
 
         // Act
-        var retrievedBoard = await _repository.GetBoardById(savedBoard.Id);
+        var retrievedBoard = _repository.GetBoardById(savedBoard.Id);
 
         // Assert
         Assert.NotNull(retrievedBoard);
@@ -150,7 +147,7 @@ public class LiteBoardRepositoryTests : IAsyncLifetime {
         var nonExistentId = Guid.NewGuid();
 
         // Act
-        var board = await _repository!.GetBoardById(nonExistentId);
+        var board = _repository!.GetBoardById(nonExistentId);
 
         // Assert
         Assert.Null(board);
@@ -170,10 +167,10 @@ public class LiteBoardRepositoryTests : IAsyncLifetime {
             LiveCells = liveCells.Select(t => new CellCoordinate(t.Item1, t.Item2)).ToList()
         };
         
-        var savedBoard = await _repository!.CreateBoard(board);
+        var savedBoard = _repository!.CreateBoard(board);
 
         // Act
-        var retrievedBoard = await _repository.GetBoardById(savedBoard.Id);
+        var retrievedBoard = _repository.GetBoardById(savedBoard.Id);
 
         // Assert
         Assert.NotNull(retrievedBoard);
@@ -200,12 +197,12 @@ public class LiteBoardRepositoryTests : IAsyncLifetime {
             LiveCells = new List<CellCoordinate> { new(5, 5) }
         };
 
-        var saved1 = await _repository!.CreateBoard(board1);
-        var saved2 = await _repository.CreateBoard(board2);
+        var saved1 = _repository!.CreateBoard(board1);
+        var saved2 = _repository.CreateBoard(board2);
 
         // Act
-        var retrieved1 = await _repository.GetBoardById(saved1.Id);
-        var retrieved2 = await _repository.GetBoardById(saved2.Id);
+        var retrieved1 = _repository.GetBoardById(saved1.Id);
+        var retrieved2 = _repository.GetBoardById(saved2.Id);
 
         // Assert
         Assert.NotNull(retrieved1);
@@ -222,11 +219,11 @@ public class LiteBoardRepositoryTests : IAsyncLifetime {
     public async Task DeleteBoard_RemovesBoardSuccessfully() {
         // Arrange
         var board = CreateTestBoard();
-        var savedBoard = await _repository!.CreateBoard(board);
+        var savedBoard = _repository!.CreateBoard(board);
 
         // Act
-        var deleteResult = await _repository.DeleteBoard(savedBoard.Id);
-        var retrievedAfterDelete = await _repository.GetBoardById(savedBoard.Id);
+        var deleteResult = _repository.DeleteBoard(savedBoard.Id);
+        var retrievedAfterDelete = _repository.GetBoardById(savedBoard.Id);
 
         // Assert
         Assert.True(deleteResult);
@@ -239,7 +236,7 @@ public class LiteBoardRepositoryTests : IAsyncLifetime {
         var nonExistentId = Guid.NewGuid();
 
         // Act
-        var result = await _repository!.DeleteBoard(nonExistentId);
+        var result = _repository!.DeleteBoard(nonExistentId);
 
         // Assert
         Assert.False(result);
@@ -251,15 +248,15 @@ public class LiteBoardRepositoryTests : IAsyncLifetime {
         var board1 = CreateTestBoard(5, 5);
         var board2 = CreateTestBoard(10, 10);
 
-        var saved1 = await _repository!.CreateBoard(board1);
-        var saved2 = await _repository.CreateBoard(board2);
+        var saved1 = _repository!.CreateBoard(board1);
+        var saved2 = _repository.CreateBoard(board2);
 
         // Act
-        await _repository.DeleteBoard(saved1.Id);
+        _repository.DeleteBoard(saved1.Id);
 
         // Assert
-        var retrieved1 = await _repository.GetBoardById(saved1.Id);
-        var retrieved2 = await _repository.GetBoardById(saved2.Id);
+        var retrieved1 = _repository.GetBoardById(saved1.Id);
+        var retrieved2 = _repository.GetBoardById(saved2.Id);
 
         Assert.Null(retrieved1);
         Assert.NotNull(retrieved2);
@@ -275,7 +272,7 @@ public class LiteBoardRepositoryTests : IAsyncLifetime {
         var nonExistentId = Guid.NewGuid();
 
         // Act
-        var exists = await _repository!.BoardExists(nonExistentId);
+        var exists = _repository!.BoardExists(nonExistentId);
 
         // Assert
         Assert.False(exists);
@@ -285,10 +282,10 @@ public class LiteBoardRepositoryTests : IAsyncLifetime {
     public async Task BoardExists_ReturnsTrue_ForExistingBoard() {
         // Arrange
         var board = CreateTestBoard();
-        var savedBoard = await _repository!.CreateBoard(board);
+        var savedBoard = _repository!.CreateBoard(board);
 
         // Act
-        var exists = await _repository.BoardExists(savedBoard.Id);
+        var exists = _repository.BoardExists(savedBoard.Id);
 
         // Assert
         Assert.True(exists);
@@ -298,11 +295,11 @@ public class LiteBoardRepositoryTests : IAsyncLifetime {
     public async Task BoardExists_ReturnsFalse_AfterBoardDeleted() {
         // Arrange
         var board = CreateTestBoard();
-        var savedBoard = await _repository!.CreateBoard(board);
-        await _repository.DeleteBoard(savedBoard.Id);
+        var savedBoard = _repository!.CreateBoard(board);
+        _repository.DeleteBoard(savedBoard.Id);
 
         // Act
-        var exists = await _repository.BoardExists(savedBoard.Id);
+        var exists = _repository.BoardExists(savedBoard.Id);
 
         // Assert
         Assert.False(exists);
@@ -325,13 +322,13 @@ public class LiteBoardRepositoryTests : IAsyncLifetime {
 
         // Act: Create all boards
         foreach (var board in boards) {
-            var saved = await _repository!.CreateBoard(board);
+            var saved = _repository!.CreateBoard(board);
             savedIds.Add(saved.Id);
         }
 
         // Assert: Retrieve and verify all boards
         foreach (var id in savedIds) {
-            var retrieved = await _repository!.GetBoardById(id);
+            var retrieved = _repository!.GetBoardById(id);
             Assert.NotNull(retrieved);
             Assert.Equal(id, retrieved!.Id);
         }
@@ -358,8 +355,8 @@ public class LiteBoardRepositoryTests : IAsyncLifetime {
         };
 
         // Act
-        var savedBoard = await _repository!.CreateBoard(board);
-        var retrievedBoard = await _repository.GetBoardById(savedBoard.Id);
+        var savedBoard = _repository!.CreateBoard(board);
+        var retrievedBoard = _repository.GetBoardById(savedBoard.Id);
 
         // Assert
         Assert.NotNull(retrievedBoard);
@@ -383,8 +380,8 @@ public class LiteBoardRepositoryTests : IAsyncLifetime {
                 LiveCells = new List<CellCoordinate> { new(0, 0) }
             };
 
-            var saved = await _repository!.CreateBoard(board);
-            var retrieved = await _repository.GetBoardById(saved.Id);
+            var saved = _repository!.CreateBoard(board);
+            var retrieved = _repository.GetBoardById(saved.Id);
 
             // Assert
             Assert.NotNull(retrieved);

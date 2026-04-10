@@ -6,6 +6,11 @@ namespace api.Models;
 /// </summary>
 public class BoardState {
     /// <summary>
+    /// Unique identifier for the board.
+    /// </summary>
+    public Guid Id { get; set; }
+
+    /// <summary>
     /// The generation number (0 for initial state).
     /// </summary>
     public int Generation { get; set; }
@@ -30,6 +35,7 @@ public class BoardState {
     /// Creates a BoardState from a persisted Board entity at generation 0.
     /// </summary>
     public BoardState(Board board) {
+        Id = board.Id;
         Generation = 0;
         Width = board.Width;
         Height = board.Height;

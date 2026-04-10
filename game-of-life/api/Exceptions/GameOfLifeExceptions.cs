@@ -1,4 +1,4 @@
-namespace Api.Exceptions;
+namespace api.Exceptions;
 
 /// <summary>
 /// Thrown when a board with the specified ID is not found in the repository.
