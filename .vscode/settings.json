@@ -1,7 +1,14 @@
 {
     "python.testing.pytestArgs": [
-        "smarter_technology"
+        "robotic-package-sorter"
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./robotic-package-sorter",
+        "-p",
+        "test_*.py"
+    ]
 }

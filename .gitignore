@@ -6,10 +6,6 @@ bin/
 obj/
 out/
 
-# VS Code
-.vscode/
-*.code-workspace
-
 # User-specific files
 *.user
 *.suo
@@ -52,6 +48,7 @@ pnpm-debug.log*
 
 # Editor folders
 .vscode/
+*.code-workspace
 .idea/
 
 # OS files
