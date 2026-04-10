@@ -22,8 +22,7 @@ public class GameOfLifeServiceTests {
         _mockRepository = new Mock<IBoardRepository>();
         
         // Create a real configuration with test values - no need to mock
-        var configDict = new Dictionary<string, string?>
-        {
+        var configDict = new Dictionary<string, string?> {
             { "GameOfLife:MaxIterationsForFinalState", "9999" }
         };
         
