@@ -199,7 +199,7 @@ public class BoardsControllerTests {
         var okResult = result as OkObjectResult;
         okResult?.StatusCode.Should().Be(200);
 
-        var response = okResult?.Value as SuccessResponse<BoardStateResponse>;
+        var response = okResult?.Value as SuccessResponse<BoardResponse>;
         response.Should().NotBeNull();
         response?.Data.Generation.Should().Be(0);
         response?.Data.Width.Should().Be(2);

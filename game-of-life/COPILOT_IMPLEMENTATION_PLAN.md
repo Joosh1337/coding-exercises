@@ -199,7 +199,7 @@ Requirements:
 - `string Message`
 - `string[] Details` (array of validation errors if any)
 
-**BoardStateResponse:**
+**BoardResponse:**
 - `int Generation`
 - `int Width, Height`
 - `int[][] LiveCells` (array of [x, y] coordinates)
@@ -217,13 +217,13 @@ Requirements:
 
 2. **GET /boards/{id}**
    - Response: Board state at generation 0
-   - Uses BoardStateResponse format
+   - Uses BoardResponse format
    - Error: 404 if board not found
 
 3. **GET /boards/{id}/states/next**
    - Response: Next generation state
    - Calls `GameOfLifeService.GetStatesAhead(boardId, 1)` directly
-   - Uses BoardStateResponse format
+   - Uses BoardResponse format
    - Error: 404 if board not found
 
 4. **GET /boards/{id}/states?steps=N**

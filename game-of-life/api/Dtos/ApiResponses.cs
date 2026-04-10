@@ -50,7 +50,7 @@ public class ErrorResponse {
 /// <summary>
 /// Response DTO for representing a board state.
 /// </summary>
-public class BoardStateResponse {
+public class BoardResponse {
     /// <summary>
     /// Unique identifier for the board.
     /// </summary>
@@ -76,7 +76,7 @@ public class BoardStateResponse {
     /// </summary>
     public int[][] LiveCells { get; set; }
 
-    public BoardStateResponse(Guid id, int generation, int width, int height, int[][] liveCells) {
+    public BoardResponse(Guid id, int generation, int width, int height, int[][] liveCells) {
         Id = id;
         Generation = generation;
         Width = width;
@@ -85,14 +85,14 @@ public class BoardStateResponse {
     }
 
     /// <summary>
-    /// Creates a BoardStateResponse from a BoardState domain model.
+    /// Creates a BoardResponse from a BoardState domain model.
     /// </summary>
-    public static BoardStateResponse FromBoardState(api.Models.BoardState boardState) {
+    public static BoardResponse FromBoardState(api.Models.BoardState boardState) {
         var liveCells = boardState.LiveCells
             .Select(cell => new int[] { cell.x, cell.y })
             .ToArray();
 
-        return new BoardStateResponse(
+        return new BoardResponse(
             boardState.Id,
             boardState.Generation,
             boardState.Width,
@@ -107,6 +107,11 @@ public class BoardStateResponse {
 /// Used for /states endpoints to return the complete board grid.
 /// </summary>
 public class BoardRepresentationResponse {
+        /// <summary>
+    /// Unique identifier for the board.
+    /// </summary>
+    public Guid Id { get; set; }
+
     /// <summary>
     /// The current generation number.
     /// </summary>
@@ -128,7 +133,8 @@ public class BoardRepresentationResponse {
     /// </summary>
     public int[][] BoardDisplay { get; set; }
 
-    public BoardRepresentationResponse(int generation, int width, int height, int[][] boardDisplay) {
+    public BoardRepresentationResponse(Guid id, int generation, int width, int height, int[][] boardDisplay) {
+        Id = id;
         Generation = generation;
         Width = width;
         Height = height;
@@ -140,6 +146,7 @@ public class BoardRepresentationResponse {
     /// </summary>
     public static BoardRepresentationResponse FromBoardState(api.Models.BoardState boardState) {
         return new BoardRepresentationResponse(
+            boardState.Id,
             boardState.Generation,
             boardState.Width,
             boardState.Height,

@@ -50,13 +50,13 @@ public class BoardsController : ControllerBase {
     /// </summary>
     public IActionResult GetAllBoards() {
         try {
-            var responseList = new List<BoardStateResponse>();
+            var responseList = new List<BoardResponse>();
             var boardStates = _gameOfLifeService.GetAllBoardStates();
             foreach (var boardState in boardStates) {
-                responseList.Add(BoardStateResponse.FromBoardState(boardState));
+                responseList.Add(BoardResponse.FromBoardState(boardState));
             }
 
-            return Ok(new SuccessResponse<List<BoardStateResponse>>(
+            return Ok(new SuccessResponse<List<BoardResponse>>(
                 responseList,
                 "Board states retrieved successfully."
             ));
@@ -73,9 +73,9 @@ public class BoardsController : ControllerBase {
     public IActionResult GetBoard(Guid id) {
         try {
             var boardState = _gameOfLifeService.GetBoardState(id);
-            var response = BoardStateResponse.FromBoardState(boardState);
+            var response = BoardResponse.FromBoardState(boardState);
 
-            return Ok(new SuccessResponse<BoardStateResponse>(
+            return Ok(new SuccessResponse<BoardResponse>(
                 response,
                 "Board state retrieved successfully."
             ));

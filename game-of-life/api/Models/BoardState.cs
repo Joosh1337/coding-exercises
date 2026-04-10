@@ -96,6 +96,7 @@ public class BoardState {
         }
 
         return new BoardState {
+            Id = Id,
             Generation = Generation + 1,
             Width = Width,
             Height = Height,

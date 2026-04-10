@@ -7,6 +7,7 @@
 
 ## Basic Rules Logic
 
+```csharp
 public BoardState GenerateNextStep() {
    var neighborCounts = new Dictionary<(int x, int y), int>();
    var nextLiveCells = new HashSet<(int x, int y)>();
@@ -54,34 +55,35 @@ public BoardState GenerateNextStep() {
       LiveCells = nextLiveCells
    }
 }
+```
 
 # Endpoints
-1. POST     /boards
-2. GET      /boards/{id}
-3. GET      /boards/{id}/states/next
-4. GET      /boards/{id}/states?steps=N
-5. GET      /boards/{id}/states/final
-6. DELETE   /boards/{id}
+1. `POST     /boards`
+2. `GET      /boards/{id}`
+3. `GET      /boards/{id}/states/next`
+4. `GET      /boards/{id}/states?steps=N`
+5. `GET      /boards/{id}/states/final`
+6. `DELETE   /boards/{id}`
 
 # Classes   
 1. Board (persisted in DB)
-   1. System.Guid ID
-   2. int Width
-   3. int Height
-   4. HashSet<(int x, int y)> LiveCells
+   1. `System.Guid ID`
+   2. `int Width`
+   3. `int Height`
+   4. `HashSet<(int x, int y)> LiveCells`
 2. BoardState (computed in runtime)
-   1. int Generation
-   2. int Width
-   3. int Height
-   4. HashSet<(int x, int y)> LiveCells
-   5. GenerateNextStep() -> BoardState
-   6. GenerateBoardArray() -> int[,]
+   1. `int Generation`
+   2. `int Width`
+   3. `int Height`
+   4. `HashSet<(int x, int y)> LiveCells`
+   5. `GenerateNextStep() -> BoardState`
+   6. `GenerateBoardArray() -> int[,]`
 
 # Functions
-1. UploadBoard(int width, int height, int[,] cells) -> Guid
-2. GetBoard(Guid id) -> Board
+1. `UploadBoard(int width, int height, int[,] cells) -> Guid`
+2. `GetBoard(Guid id) -> Board`
 
-# Test Cases
+# Sample Test Cases
 1. Uploading a board works (test with 0 steps)
 2. Uploading the same board twice will create two boards with different guids
 4. Next state for a board works
