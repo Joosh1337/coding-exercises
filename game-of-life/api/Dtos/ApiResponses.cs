@@ -61,7 +61,7 @@ public class BoardResponse {
     /// <summary>
     /// The current generation number.
     /// </summary>
-    [Range(1, int.MaxValue)]
+    [Range(0, int.MaxValue)]
     public int Generation { get; set; }
 
     /// <summary>
@@ -120,7 +120,7 @@ public class BoardRepresentationResponse {
     /// <summary>
     /// The current generation number.
     /// </summary>
-    [Range(1, int.MaxValue)]
+    [Range(0, int.MaxValue)]
     public int Generation { get; set; }
 
     /// <summary>

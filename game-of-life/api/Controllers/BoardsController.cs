@@ -159,7 +159,7 @@ public class BoardsController : ControllerBase {
         try {
             var deleted = _gameOfLifeService.DeleteBoard(id);
 
-            if (!deleted) {
+            if (deleted) {
                 _logger.LogInformation("Board deleted: {BoardId}", id);
             }
 
