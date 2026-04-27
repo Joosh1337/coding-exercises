@@ -71,6 +71,16 @@ public class LiteBoardRepository : IBoardRepository {
     }
 
     /// <summary>
+    /// Updates an existing board in persistence.
+    /// </summary>
+    /// <param name="board">The board entity with updated values.</param>
+    /// <returns>True if the board was updated; false if it was not found.</returns>
+    public bool UpdateBoard(Board board) {
+        ArgumentNullException.ThrowIfNull(board);
+        return _database.GetCollection<Board>(CollectionName).Update(board);
+    }
+
+    /// <summary>
     /// Checks whether a board exists in persistence.
     /// </summary>
     /// <param name="id">The board's Guid.</param>

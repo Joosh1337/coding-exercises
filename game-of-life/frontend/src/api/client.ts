@@ -71,3 +71,15 @@ export async function fetchFinalState(
   const res = await fetch(`${BASE_URL}/${id}/states/final`);
   return handleResponse<BoardRepresentationResponse>(res);
 }
+
+export async function updateBoard(
+  id: string,
+  req: { name: string; width: number; height: number; initialCells: number[][] }
+): Promise<void> {
+  const res = await fetch(`${BASE_URL}/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  return handleResponse<void>(res);
+}

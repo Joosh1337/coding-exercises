@@ -11,6 +11,11 @@ export function BoardCard({ board, onDelete, isDeleting }: BoardCardProps) {
   return (
     <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg border border-gray-700">
       <div className="flex flex-col gap-1">
+        {board.name ? (
+          <span className="text-base font-semibold text-white">{board.name}</span>
+        ) : (
+          <span className="text-base text-gray-500 italic">Unnamed board</span>
+        )}
         <span className="text-xs text-gray-400 font-mono">{board.id}</span>
         <span className="text-sm text-gray-200">
           {board.width} × {board.height} &mdash; {board.liveCells.length} live cells
@@ -22,6 +27,12 @@ export function BoardCard({ board, onDelete, isDeleting }: BoardCardProps) {
           className="px-3 py-1.5 text-sm bg-green-700 hover:bg-green-600 text-white rounded transition-colors"
         >
           Simulate
+        </Link>
+        <Link
+          to={`/boards/${board.id}/edit`}
+          className="px-3 py-1.5 text-sm bg-gray-600 hover:bg-gray-500 text-white rounded transition-colors"
+        >
+          Edit
         </Link>
         <button
           onClick={onDelete}

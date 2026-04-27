@@ -11,6 +11,7 @@ function makeGrid(height: number, width: number): boolean[][] {
 
 export function CreateBoardPage() {
   const navigate = useNavigate();
+  const [name, setName] = useState("");
   const [width, setWidth] = useState(10);
   const [height, setHeight] = useState(10);
   const [grid, setGrid] = useState<boolean[][]>(() => makeGrid(10, 10));
@@ -32,7 +33,7 @@ export function CreateBoardPage() {
     e.preventDefault();
     const initialCells = grid.map((row) => row.map((cell) => (cell ? 1 : 0)));
     createBoard.mutate(
-      { width, height, initialCells },
+      { name, width, height, initialCells },
       {
         onSuccess: (data) => navigate(`/boards/${data.id}`),
       }
@@ -52,6 +53,17 @@ export function CreateBoardPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-gray-400">Name</span>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Unnamed board"
+              className="w-72 px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-green-500"
+            />
+          </label>
+
           <div className="flex gap-6">
             <label className="flex flex-col gap-1">
               <span className="text-sm text-gray-400">Width</span>

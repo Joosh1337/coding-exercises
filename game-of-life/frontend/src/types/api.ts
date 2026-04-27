@@ -11,6 +11,7 @@ export interface ErrorResponse {
 
 export interface BoardResponse {
   id: string;
+  name: string;
   generation: number;
   width: number;
   height: number;
@@ -26,6 +27,7 @@ export interface BoardRepresentationResponse {
 }
 
 export interface CreateBoardRequest {
+  name?: string;
   width: number;
   height: number;
   initialCells: number[][];

@@ -217,7 +217,15 @@ export function BoardSimulationPage() {
           <Link to="/" className="text-gray-400 hover:text-white text-sm transition-colors">
             ← Back
           </Link>
-          <h1 className="text-2xl font-bold">Board Simulation</h1>
+          <h1 className="text-2xl font-bold">
+            {board.name || <span className="text-gray-500 italic font-normal">Unnamed board</span>}
+          </h1>
+          <Link
+            to={`/boards/${board.id}/edit`}
+            className="ml-auto px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors"
+          >
+            Edit
+          </Link>
         </div>
         <p className="text-xs text-gray-500 font-mono mb-4">{board.id}</p>
 
