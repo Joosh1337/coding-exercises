@@ -124,7 +124,6 @@ export function BoardSimulationPage() {
   const busy = manualPending || isPlaying;
 
   function pushState(newState: DisplayState, fromIndex: number) {
-    setReachedFinalState(false);
     setHistory((h) => [...h.slice(0, fromIndex + 1), newState]);
     setHistoryIndex(fromIndex + 1);
   }
@@ -141,7 +140,6 @@ export function BoardSimulationPage() {
   }
 
   function handleNext() {
-    setReachedFinalState(false);
     const nextIndex = historyIndex + 1;
     if (nextIndex < history.length) {
       setHistoryIndex(nextIndex);
@@ -177,11 +175,13 @@ export function BoardSimulationPage() {
   function handleFinal() {
     const capturedIndex = historyIndex;
     finalState.mutate(id!, {
-      onSuccess: (data) =>
+      onSuccess: (data) => {
         pushState(
           { generation: data.generation, boardDisplay: data.boardDisplay },
           capturedIndex
-        ),
+        );
+        setReachedFinalState(true);
+      },
     });
   }
 
@@ -261,6 +261,15 @@ export function BoardSimulationPage() {
             )}
             Next →
           </button>
+
+          <button
+            onClick={handleFinal}
+            disabled={busy || reachedFinalState}
+            title="Find final state"
+            className="px-3 py-2.5 bg-gray-700 hover:bg-gray-600 disabled:opacity-30 rounded-lg text-sm font-medium transition-colors"
+          >
+            End ⏭
+          </button>
         </div>
 
         {/* Play / Stop / Restart + speed control */}
@@ -326,15 +335,6 @@ export function BoardSimulationPage() {
               Jump
             </button>
           </div>
-
-          <button
-            onClick={handleFinal}
-            disabled={busy}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-50 rounded text-sm font-medium transition-colors"
-          >
-            {finalState.isPending && <LoadingSpinner />}
-            Find Final State
-          </button>
         </div>
 
         {/* Errors */}
