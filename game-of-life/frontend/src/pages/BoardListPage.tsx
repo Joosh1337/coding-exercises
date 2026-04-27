@@ -58,7 +58,7 @@ export function BoardListPage() {
           </div>
         )}
 
-        {data && (
+        {data && data.length > 0 && (
           <Pagination
             page={page}
             pageSize={PAGE_SIZE}

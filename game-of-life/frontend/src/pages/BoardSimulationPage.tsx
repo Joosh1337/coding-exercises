@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { fetchStatesAhead } from "../api/client";
 import { BoardGrid } from "../components/BoardGrid";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { useBoard } from "../hooks/useBoard";
 import { useFinalState, useStatesAhead } from "../hooks/useBoardStates";
-import { useDeleteBoard } from "../hooks/useDeleteBoard";
 
 const DEFAULT_PLAY_SPEED = 500;
 const MIN_PLAY_SPEED = 100;
@@ -43,7 +42,6 @@ function gridsEqual(a: number[][], b: number[][]): boolean {
 
 export function BoardSimulationPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
 
   const { data: board, isLoading, isError, error } = useBoard(id!);
   const [history, setHistory] = useState<DisplayState[]>([]);
@@ -56,7 +54,6 @@ export function BoardSimulationPage() {
 
   const statesAhead = useStatesAhead();
   const finalState = useFinalState();
-  const deleteBoard = useDeleteBoard();
 
   // Seed history with generation 0 once board data arrives.
   useEffect(() => {
@@ -205,11 +202,6 @@ export function BoardSimulationPage() {
     setIsPlaying(true);
   }
 
-  function handleDelete() {
-    setIsPlaying(false);
-    deleteBoard.mutate(id!, { onSuccess: () => navigate("/") });
-  }
-
   return (
     <div className="min-h-screen bg-gray-950 text-white p-8">
       <div className="max-w-3xl mx-auto">
@@ -227,8 +219,6 @@ export function BoardSimulationPage() {
             Edit
           </Link>
         </div>
-        <p className="text-xs text-gray-500 font-mono mb-4">{board.id}</p>
-
         {/* Grid */}
         <div className="mb-6 flex justify-center">
           <div className="flex flex-col items-center gap-2">
@@ -347,17 +337,6 @@ export function BoardSimulationPage() {
           </button>
         </div>
 
-        {/* Danger zone */}
-        <div className="flex justify-center mt-6">
-          <button
-            onClick={handleDelete}
-            disabled={deleteBoard.isPending}
-            className="px-4 py-2 bg-red-900 hover:bg-red-800 disabled:opacity-50 rounded text-sm text-red-300 transition-colors"
-          >
-            {deleteBoard.isPending ? "Deleting…" : "Delete Board"}
-          </button>
-        </div>
-
         {/* Errors */}
         <div className="mt-4 flex flex-col gap-2">
           {playError && <ErrorMessage message={playError} />}
@@ -366,9 +345,6 @@ export function BoardSimulationPage() {
           )}
           {finalState.isError && (
             <ErrorMessage message={(finalState.error as Error).message} />
-          )}
-          {deleteBoard.isError && (
-            <ErrorMessage message={(deleteBoard.error as Error).message} />
           )}
         </div>
       </div>

@@ -16,7 +16,6 @@ export function BoardCard({ board, onDelete, isDeleting }: BoardCardProps) {
         ) : (
           <span className="text-base text-gray-500 italic">Unnamed board</span>
         )}
-        <span className="text-xs text-gray-400 font-mono">{board.id}</span>
         <span className="text-sm text-gray-200">
           {board.width} × {board.height} &mdash; {board.liveCells.length} live cells
         </span>
