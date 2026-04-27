@@ -11,6 +11,14 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
+
 // Configure LiteDB and repository
 var databaseFileName = builder.Configuration["GameOfLife:DatabasePath"] ?? "game_of_life.db";
 var databasePath = Path.Combine(AppContext.BaseDirectory, databaseFileName);
@@ -32,6 +40,8 @@ if (app.Environment.IsDevelopment()) {
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowFrontend");
 
 app.MapControllers();
 
