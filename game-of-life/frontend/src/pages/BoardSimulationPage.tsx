@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { fetchStatesAhead } from "../api/client";
 import { BoardGrid } from "../components/BoardGrid";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { LoadingSpinner } from "../components/LoadingSpinner";
@@ -26,6 +27,16 @@ function liveCellsToDisplay(
   return grid;
 }
 
+function gridsEqual(a: number[][], b: number[][]): boolean {
+  return (
+    a.length === b.length &&
+    a.every(
+      (row, y) =>
+        row.length === b[y].length && row.every((cell, x) => cell === b[y][x])
+    )
+  );
+}
+
 export function BoardSimulationPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -34,11 +45,14 @@ export function BoardSimulationPage() {
   const [history, setHistory] = useState<DisplayState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const [jumpSteps, setJumpSteps] = useState(1);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playError, setPlayError] = useState<string | null>(null);
 
   const statesAhead = useStatesAhead();
   const finalState = useFinalState();
   const deleteBoard = useDeleteBoard();
 
+  // Seed history with generation 0 once board data arrives.
   useEffect(() => {
     if (board && history.length === 0) {
       setHistory([
@@ -50,6 +64,33 @@ export function BoardSimulationPage() {
       setHistoryIndex(0);
     }
   }, [board, history.length]);
+
+  // Play loop: schedule the next step 50ms after each state update.
+  // Re-runs whenever isPlaying, historyIndex, or history changes.
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    const current = history[historyIndex];
+    if (!current) return;
+
+    const timeout = setTimeout(async () => {
+      try {
+        const data = await fetchStatesAhead(id!, current.generation + 1);
+        const stable = gridsEqual(current.boardDisplay, data.boardDisplay);
+        setHistory((h) => [
+          ...h.slice(0, historyIndex + 1),
+          { generation: data.generation, boardDisplay: data.boardDisplay },
+        ]);
+        setHistoryIndex((i) => i + 1);
+        if (stable) setIsPlaying(false);
+      } catch (err) {
+        setIsPlaying(false);
+        setPlayError((err as Error).message);
+      }
+    }, 50);
+
+    return () => clearTimeout(timeout);
+  }, [isPlaying, historyIndex, history, id]);
 
   if (isLoading) {
     return (
@@ -74,9 +115,8 @@ export function BoardSimulationPage() {
   const generation = current?.generation ?? 0;
   const display = current?.boardDisplay ?? [];
 
-  const anyPending = statesAhead.isPending || finalState.isPending;
-  const canGoPrev = historyIndex > 0;
-  const canGoNext = !anyPending;
+  const manualPending = statesAhead.isPending || finalState.isPending;
+  const busy = manualPending || isPlaying;
 
   function pushState(newState: DisplayState, fromIndex: number) {
     setHistory((h) => [...h.slice(0, fromIndex + 1), newState]);
@@ -84,7 +124,7 @@ export function BoardSimulationPage() {
   }
 
   function handlePrev() {
-    if (canGoPrev) setHistoryIndex((i) => i - 1);
+    if (historyIndex > 0) setHistoryIndex((i) => i - 1);
   }
 
   function handleNext() {
@@ -98,7 +138,10 @@ export function BoardSimulationPage() {
       { id: id!, steps: generation + 1 },
       {
         onSuccess: (data) =>
-          pushState({ generation: data.generation, boardDisplay: data.boardDisplay }, capturedIndex),
+          pushState(
+            { generation: data.generation, boardDisplay: data.boardDisplay },
+            capturedIndex
+          ),
       }
     );
   }
@@ -109,7 +152,10 @@ export function BoardSimulationPage() {
       { id: id!, steps: generation + jumpSteps },
       {
         onSuccess: (data) =>
-          pushState({ generation: data.generation, boardDisplay: data.boardDisplay }, capturedIndex),
+          pushState(
+            { generation: data.generation, boardDisplay: data.boardDisplay },
+            capturedIndex
+          ),
       }
     );
   }
@@ -118,11 +164,24 @@ export function BoardSimulationPage() {
     const capturedIndex = historyIndex;
     finalState.mutate(id!, {
       onSuccess: (data) =>
-        pushState({ generation: data.generation, boardDisplay: data.boardDisplay }, capturedIndex),
+        pushState(
+          { generation: data.generation, boardDisplay: data.boardDisplay },
+          capturedIndex
+        ),
     });
   }
 
+  function handlePlay() {
+    setPlayError(null);
+    setIsPlaying(true);
+  }
+
+  function handleStop() {
+    setIsPlaying(false);
+  }
+
   function handleDelete() {
+    setIsPlaying(false);
     deleteBoard.mutate(id!, { onSuccess: () => navigate("/") });
   }
 
@@ -139,7 +198,7 @@ export function BoardSimulationPage() {
 
         {/* Grid */}
         <div className="mb-6 flex justify-center">
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-2">
             <div className="text-sm text-gray-400">
               {board.width} × {board.height}
             </div>
@@ -148,11 +207,11 @@ export function BoardSimulationPage() {
         </div>
 
         {/* Primary navigation */}
-        <div className="flex items-center justify-center gap-4 mb-6">
+        <div className="flex items-center justify-center gap-4 mb-4">
           <button
             onClick={handlePrev}
-            disabled={!canGoPrev || anyPending}
-            className="flex items-center gap-2 px-5 py-2.5 bg-gray-700 hover:bg-gray-600 disabled:opacity-30 rounded-lg text-sm font-medium transition-colors"
+            disabled={busy || historyIndex === 0}
+            className="px-5 py-2.5 bg-gray-700 hover:bg-gray-600 disabled:opacity-30 rounded-lg text-sm font-medium transition-colors"
           >
             ← Previous
           </button>
@@ -164,14 +223,34 @@ export function BoardSimulationPage() {
 
           <button
             onClick={handleNext}
-            disabled={!canGoNext}
+            disabled={busy}
             className="flex items-center gap-2 px-5 py-2.5 bg-gray-700 hover:bg-gray-600 disabled:opacity-30 rounded-lg text-sm font-medium transition-colors"
           >
-            {statesAhead.isPending && historyIndex >= history.length - 1 ? (
+            {statesAhead.isPending && historyIndex >= history.length - 1 && (
               <LoadingSpinner />
-            ) : null}
+            )}
             Next →
           </button>
+        </div>
+
+        {/* Play / Stop */}
+        <div className="flex justify-center mb-5">
+          {isPlaying ? (
+            <button
+              onClick={handleStop}
+              className="px-8 py-2.5 bg-amber-600 hover:bg-amber-500 rounded-lg text-sm font-semibold tracking-wide transition-colors"
+            >
+              ⏹ Stop
+            </button>
+          ) : (
+            <button
+              onClick={handlePlay}
+              disabled={manualPending}
+              className="px-8 py-2.5 bg-green-700 hover:bg-green-600 disabled:opacity-50 rounded-lg text-sm font-semibold tracking-wide transition-colors"
+            >
+              ▶ Play
+            </button>
+          )}
         </div>
 
         {/* Jump controls */}
@@ -183,25 +262,26 @@ export function BoardSimulationPage() {
               min={1}
               value={jumpSteps}
               onChange={(e) => setJumpSteps(Math.max(1, Number(e.target.value)))}
-              className="w-20 px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
+              disabled={busy}
+              className="w-20 px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500 disabled:opacity-50"
             />
             <label className="text-sm text-gray-400 whitespace-nowrap">steps</label>
             <button
               onClick={handleJump}
-              disabled={anyPending}
+              disabled={busy}
               className="flex items-center gap-2 px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 rounded text-sm font-medium transition-colors"
             >
-              {statesAhead.isPending ? <LoadingSpinner /> : null}
+              {statesAhead.isPending && <LoadingSpinner />}
               Jump
             </button>
           </div>
 
           <button
             onClick={handleFinal}
-            disabled={anyPending}
+            disabled={busy}
             className="flex items-center gap-2 px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-50 rounded text-sm font-medium transition-colors"
           >
-            {finalState.isPending ? <LoadingSpinner /> : null}
+            {finalState.isPending && <LoadingSpinner />}
             Find Final State
           </button>
         </div>
@@ -219,6 +299,7 @@ export function BoardSimulationPage() {
 
         {/* Errors */}
         <div className="mt-4 flex flex-col gap-2">
+          {playError && <ErrorMessage message={playError} />}
           {statesAhead.isError && (
             <ErrorMessage message={(statesAhead.error as Error).message} />
           )}
