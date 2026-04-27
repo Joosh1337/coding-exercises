@@ -8,6 +8,10 @@ import { useBoard } from "../hooks/useBoard";
 import { useFinalState, useStatesAhead } from "../hooks/useBoardStates";
 import { useDeleteBoard } from "../hooks/useDeleteBoard";
 
+const DEFAULT_PLAY_SPEED = 500;
+const MIN_PLAY_SPEED = 100;
+const MAX_PLAY_SPEED = 1000;
+
 interface DisplayState {
   generation: number;
   boardDisplay: number[][];
@@ -46,6 +50,8 @@ export function BoardSimulationPage() {
   const [historyIndex, setHistoryIndex] = useState(0);
   const [jumpSteps, setJumpSteps] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [reachedFinalState, setReachedFinalState] = useState(false);
+  const [playSpeed, setPlaySpeed] = useState(DEFAULT_PLAY_SPEED);
   const [playError, setPlayError] = useState<string | null>(null);
 
   const statesAhead = useStatesAhead();
@@ -65,8 +71,7 @@ export function BoardSimulationPage() {
     }
   }, [board, history.length]);
 
-  // Play loop: schedule the next step 50ms after each state update.
-  // Re-runs whenever isPlaying, historyIndex, or history changes.
+  // Play loop: schedule the next step after each state update.
   useEffect(() => {
     if (!isPlaying) return;
 
@@ -82,15 +87,18 @@ export function BoardSimulationPage() {
           { generation: data.generation, boardDisplay: data.boardDisplay },
         ]);
         setHistoryIndex((i) => i + 1);
-        if (stable) setIsPlaying(false);
+        if (stable) {
+          setIsPlaying(false);
+          setReachedFinalState(true);
+        }
       } catch (err) {
         setIsPlaying(false);
         setPlayError((err as Error).message);
       }
-    }, 50);
+    }, playSpeed);
 
     return () => clearTimeout(timeout);
-  }, [isPlaying, historyIndex, history, id]);
+  }, [isPlaying, historyIndex, history, id, playSpeed]);
 
   if (isLoading) {
     return (
@@ -119,15 +127,24 @@ export function BoardSimulationPage() {
   const busy = manualPending || isPlaying;
 
   function pushState(newState: DisplayState, fromIndex: number) {
+    setReachedFinalState(false);
     setHistory((h) => [...h.slice(0, fromIndex + 1), newState]);
     setHistoryIndex(fromIndex + 1);
   }
 
+  function handleRevertToInitial() {
+    setIsPlaying(false);
+    setReachedFinalState(false);
+    setHistoryIndex(0);
+  }
+
   function handlePrev() {
+    setReachedFinalState(false);
     if (historyIndex > 0) setHistoryIndex((i) => i - 1);
   }
 
   function handleNext() {
+    setReachedFinalState(false);
     const nextIndex = historyIndex + 1;
     if (nextIndex < history.length) {
       setHistoryIndex(nextIndex);
@@ -173,11 +190,19 @@ export function BoardSimulationPage() {
 
   function handlePlay() {
     setPlayError(null);
+    setReachedFinalState(false);
     setIsPlaying(true);
   }
 
   function handleStop() {
     setIsPlaying(false);
+  }
+
+  function handleRestart() {
+    setPlayError(null);
+    setReachedFinalState(false);
+    setHistoryIndex(0);
+    setIsPlaying(true);
   }
 
   function handleDelete() {
@@ -199,15 +224,22 @@ export function BoardSimulationPage() {
         {/* Grid */}
         <div className="mb-6 flex justify-center">
           <div className="flex flex-col items-center gap-2">
-            <div className="text-sm text-gray-400">
-              {board.width} × {board.height}
-            </div>
+            <div className="text-sm text-gray-400">{board.width} × {board.height}</div>
             {display.length > 0 && <BoardGrid display={display} />}
           </div>
         </div>
 
         {/* Primary navigation */}
-        <div className="flex items-center justify-center gap-4 mb-4">
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <button
+            onClick={handleRevertToInitial}
+            disabled={busy || historyIndex === 0}
+            title="Return to generation 0"
+            className="px-3 py-2.5 bg-gray-700 hover:bg-gray-600 disabled:opacity-30 rounded-lg text-sm font-medium transition-colors"
+          >
+            ⏮ Start
+          </button>
+
           <button
             onClick={handlePrev}
             disabled={busy || historyIndex === 0}
@@ -233,9 +265,16 @@ export function BoardSimulationPage() {
           </button>
         </div>
 
-        {/* Play / Stop */}
-        <div className="flex justify-center mb-5">
-          {isPlaying ? (
+        {/* Play / Stop / Restart + speed control */}
+        <div className="flex flex-col items-center gap-3 mb-5">
+          {reachedFinalState ? (
+            <button
+              onClick={handleRestart}
+              className="px-8 py-2.5 bg-teal-700 hover:bg-teal-600 rounded-lg text-sm font-semibold tracking-wide transition-colors"
+            >
+              ↺ Restart
+            </button>
+          ) : isPlaying ? (
             <button
               onClick={handleStop}
               className="px-8 py-2.5 bg-amber-600 hover:bg-amber-500 rounded-lg text-sm font-semibold tracking-wide transition-colors"
@@ -251,6 +290,20 @@ export function BoardSimulationPage() {
               ▶ Play
             </button>
           )}
+
+          <div className="flex items-center gap-3">
+            <label className="text-sm text-gray-400 whitespace-nowrap">Interval</label>
+            <input
+              type="range"
+              min={MIN_PLAY_SPEED}
+              max={MAX_PLAY_SPEED}
+              step={50}
+              value={playSpeed}
+              onChange={(e) => setPlaySpeed(Number(e.target.value))}
+              className="w-32 accent-green-400"
+            />
+            <span className="text-sm text-gray-300 w-14 tabular-nums">{playSpeed}ms</span>
+          </div>
         </div>
 
         {/* Jump controls */}
