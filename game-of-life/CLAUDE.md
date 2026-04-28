@@ -64,6 +64,8 @@ Core logic lives in `BoardState.GenerateNextStep()`. Uses `HashSet<(int x, int y
 
 ### Testing
 
+**Write tests for every new feature or important change.** Use TDD when the behavior is well-defined upfront: write the test first, then implement. At minimum, add tests before marking a task complete. Missing test coverage for new API surface is treated as a bug.
+
 Tests in `api.Tests/` using XUnit + Moq + FluentAssertions. Test files mirror the `api/` structure. `BoardStateTests` cover rule correctness (underpopulation, survival, overpopulation, reproduction, oscillators, boundary conditions) and are the best place to verify rule changes.
 
 ---

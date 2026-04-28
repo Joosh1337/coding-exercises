@@ -38,7 +38,7 @@ public class BoardsControllerTests {
         };
 
         _mockGameOfLifeService
-            .Setup(s => s.CreateBoard(request.Width, request.Height, request.InitialCells))
+            .Setup(s => s.CreateBoard(request.Width, request.Height, request.InitialCells, request.Name))
             .Returns(boardId);
 
         // Act
@@ -55,7 +55,7 @@ public class BoardsControllerTests {
         response?.Message.Should().Be("Board created successfully.");
 
         _mockGameOfLifeService.Verify(
-            s => s.CreateBoard(request.Width, request.Height, request.InitialCells),
+            s => s.CreateBoard(request.Width, request.Height, request.InitialCells, request.Name),
             Times.Once);
     }
 
@@ -106,7 +106,7 @@ public class BoardsControllerTests {
         var exceptionMessage = "Width must be positive";
 
         _mockGameOfLifeService
-            .Setup(s => s.CreateBoard(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int[][]>()))
+            .Setup(s => s.CreateBoard(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int[][]>(), It.IsAny<string>()))
             .Throws(new InvalidBoardStateException(exceptionMessage));
 
         // Act
@@ -132,7 +132,7 @@ public class BoardsControllerTests {
         };
 
         _mockGameOfLifeService
-            .Setup(s => s.CreateBoard(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int[][]>()))
+            .Setup(s => s.CreateBoard(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int[][]>(), It.IsAny<string>()))
             .Throws(new Exception("Unexpected error"));
 
         // Act
@@ -159,7 +159,7 @@ public class BoardsControllerTests {
         };
 
         _mockGameOfLifeService
-            .Setup(s => s.CreateBoard(request.Width, request.Height, request.InitialCells))
+            .Setup(s => s.CreateBoard(request.Width, request.Height, request.InitialCells, request.Name))
             .Returns(boardId);
 
         // Act
@@ -532,6 +532,118 @@ public class BoardsControllerTests {
         response?.ErrorCode.Should().Be(422);
         response?.Message.Should().Contain("No final stable state");
         response?.Message.Should().Contain(maxIterations.ToString());
+    }
+
+    #endregion
+
+    #region UpdateBoard Tests
+
+    [Fact]
+    public void UpdateBoard_WithValidRequest_ReturnsNoContent() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        var request = new UpdateBoardDto {
+            Name = "Updated Board",
+            Width = 3,
+            Height = 3,
+            InitialCells = new[] { new[] { 1, 0, 0 }, new[] { 0, 1, 0 }, new[] { 0, 0, 1 } }
+        };
+
+        _mockGameOfLifeService
+            .Setup(s => s.UpdateBoard(boardId, request.Name, request.Width, request.Height, request.InitialCells));
+
+        // Act
+        var result = _controller.UpdateBoard(boardId, request);
+
+        // Assert
+        result.Should().BeOfType<NoContentResult>();
+        ((NoContentResult)result).StatusCode.Should().Be(204);
+        _mockGameOfLifeService.Verify(
+            s => s.UpdateBoard(boardId, request.Name, request.Width, request.Height, request.InitialCells),
+            Times.Once);
+    }
+
+    [Fact]
+    public void UpdateBoard_WithNullRequest_ReturnsBadRequest() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+
+        // Act
+        var result = _controller.UpdateBoard(boardId, null!);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        var response = ((BadRequestObjectResult)result).Value as ErrorResponse;
+        response?.ErrorCode.Should().Be(400);
+        response?.Message.Should().Contain("Invalid request");
+        _mockGameOfLifeService.Verify(s => s.UpdateBoard(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int[][]>()), Times.Never);
+    }
+
+    [Fact]
+    public void UpdateBoard_WithNullInitialCells_ReturnsBadRequest() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        var request = new UpdateBoardDto { Name = "Board", Width = 3, Height = 3, InitialCells = null! };
+
+        // Act
+        var result = _controller.UpdateBoard(boardId, request);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        var response = ((BadRequestObjectResult)result).Value as ErrorResponse;
+        response?.ErrorCode.Should().Be(400);
+        _mockGameOfLifeService.Verify(s => s.UpdateBoard(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int[][]>()), Times.Never);
+    }
+
+    [Fact]
+    public void UpdateBoard_WhenBoardNotFound_ReturnsNotFound() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        var request = new UpdateBoardDto {
+            Name = "Board",
+            Width = 2,
+            Height = 2,
+            InitialCells = new[] { new[] { 0, 0 }, new[] { 0, 0 } }
+        };
+
+        _mockGameOfLifeService
+            .Setup(s => s.UpdateBoard(boardId, request.Name, request.Width, request.Height, request.InitialCells))
+            .Throws(new BoardNotFoundException(boardId));
+
+        // Act
+        var result = _controller.UpdateBoard(boardId, request);
+
+        // Assert
+        result.Should().BeOfType<NotFoundObjectResult>();
+        var response = ((NotFoundObjectResult)result).Value as ErrorResponse;
+        response?.ErrorCode.Should().Be(404);
+        response?.Message.Should().Contain(boardId.ToString());
+    }
+
+    [Fact]
+    public void UpdateBoard_WhenServiceThrowsInvalidBoardStateException_ReturnsBadRequest() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        var request = new UpdateBoardDto {
+            Name = "Board",
+            Width = 2,
+            Height = 2,
+            InitialCells = new[] { new[] { 0, 0 }, new[] { 0, 0 } }
+        };
+        var exceptionMessage = "Grid dimensions do not match";
+
+        _mockGameOfLifeService
+            .Setup(s => s.UpdateBoard(boardId, request.Name, request.Width, request.Height, request.InitialCells))
+            .Throws(new InvalidBoardStateException(exceptionMessage));
+
+        // Act
+        var result = _controller.UpdateBoard(boardId, request);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        var response = ((BadRequestObjectResult)result).Value as ErrorResponse;
+        response?.ErrorCode.Should().Be(400);
+        response?.Message.Should().Be(exceptionMessage);
     }
 
     #endregion

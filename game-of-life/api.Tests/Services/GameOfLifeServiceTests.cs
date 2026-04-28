@@ -440,6 +440,95 @@ public class GameOfLifeServiceTests {
 
     #endregion
 
+    #region UpdateBoard Tests
+
+    [Fact]
+    public void UpdateBoard_WithValidInput_UpdatesAllFields() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        var existingBoard = new Board(3, 3, new List<CellCoordinate> { new(1, 1) }) { Id = boardId, Name = "Old" };
+
+        _mockRepository.Setup(r => r.GetBoardById(boardId)).Returns(existingBoard);
+        _mockRepository.Setup(r => r.UpdateBoard(It.IsAny<Board>())).Returns(true);
+
+        var newCells = new[] {
+            new[] { 1, 0, 0 },
+            new[] { 0, 1, 0 },
+            new[] { 0, 0, 1 }
+        };
+
+        // Act
+        _service.UpdateBoard(boardId, "New Name", 3, 3, newCells);
+
+        // Assert
+        _mockRepository.Verify(r => r.UpdateBoard(It.Is<Board>(b =>
+            b.Id == boardId &&
+            b.Name == "New Name" &&
+            b.Width == 3 &&
+            b.Height == 3 &&
+            b.LiveCells.Count == 3
+        )), Times.Once);
+    }
+
+    [Fact]
+    public void UpdateBoard_WhenBoardNotFound_ThrowsBoardNotFoundException() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        _mockRepository.Setup(r => r.GetBoardById(boardId)).Returns((Board?)null);
+
+        // Act & Assert
+        Assert.Throws<BoardNotFoundException>(() =>
+            _service.UpdateBoard(boardId, "Name", 2, 2, new[] { new[] { 0, 0 }, new[] { 0, 0 } }));
+
+        _mockRepository.Verify(r => r.UpdateBoard(It.IsAny<Board>()), Times.Never);
+    }
+
+    [Fact]
+    public void UpdateBoard_WhenRepositoryReturnsFalse_ThrowsBoardNotFoundException() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        var board = new Board(2, 2, new List<CellCoordinate>()) { Id = boardId };
+        _mockRepository.Setup(r => r.GetBoardById(boardId)).Returns(board);
+        _mockRepository.Setup(r => r.UpdateBoard(It.IsAny<Board>())).Returns(false);
+
+        // Act & Assert
+        Assert.Throws<BoardNotFoundException>(() =>
+            _service.UpdateBoard(boardId, "Name", 2, 2, new[] { new[] { 0, 0 }, new[] { 0, 0 } }));
+    }
+
+    [Fact]
+    public void UpdateBoard_WithWrongGridDimensions_ThrowsInvalidBoardStateException() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        var board = new Board(2, 2, new List<CellCoordinate>()) { Id = boardId };
+        _mockRepository.Setup(r => r.GetBoardById(boardId)).Returns(board);
+
+        var wrongCells = new[] { new[] { 0, 0 } }; // 1 row, but height is 2
+
+        // Act & Assert
+        Assert.Throws<InvalidBoardStateException>(() =>
+            _service.UpdateBoard(boardId, "Name", 2, 2, wrongCells));
+
+        _mockRepository.Verify(r => r.UpdateBoard(It.IsAny<Board>()), Times.Never);
+    }
+
+    [Fact]
+    public void UpdateBoard_WithEmptyName_UpdatesSuccessfully() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        var board = new Board(2, 2, new List<CellCoordinate>()) { Id = boardId, Name = "Old Name" };
+        _mockRepository.Setup(r => r.GetBoardById(boardId)).Returns(board);
+        _mockRepository.Setup(r => r.UpdateBoard(It.IsAny<Board>())).Returns(true);
+
+        // Act
+        _service.UpdateBoard(boardId, "", 2, 2, new[] { new[] { 0, 0 }, new[] { 0, 0 } });
+
+        // Assert
+        _mockRepository.Verify(r => r.UpdateBoard(It.Is<Board>(b => b.Name == "")), Times.Once);
+    }
+
+    #endregion
+
     #region DeleteBoard Tests
 
     [Fact]

@@ -269,6 +269,78 @@ public class LiteBoardRepositoryTests : IDisposable {
 
     #endregion
 
+    #region Update Tests
+
+    [Fact]
+    public async Task UpdateBoard_WithExistingBoard_ReturnsTrueAndPersistsChanges() {
+        // Arrange
+        var saved = _repository!.CreateBoard(CreateTestBoard());
+        saved.Name = "Updated";
+        saved.Width = 10;
+        saved.Height = 10;
+        saved.LiveCells = new List<CellCoordinate> { new(5, 5) };
+
+        // Act
+        var result = _repository.UpdateBoard(saved);
+        var retrieved = _repository.GetBoardById(saved.Id);
+
+        // Assert
+        Assert.True(result);
+        Assert.NotNull(retrieved);
+        Assert.Equal("Updated", retrieved!.Name);
+        Assert.Equal(10, retrieved.Width);
+        Assert.Equal(10, retrieved.Height);
+        Assert.Single(retrieved.LiveCells);
+        Assert.Contains(new CellCoordinate(5, 5), retrieved.LiveCells);
+    }
+
+    [Fact]
+    public async Task UpdateBoard_WithNonExistentBoard_ReturnsFalse() {
+        // Arrange
+        var board = CreateTestBoard();
+        board.Id = Guid.NewGuid(); // never persisted
+
+        // Act
+        var result = _repository!.UpdateBoard(board);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task UpdateBoard_PreservesId() {
+        // Arrange
+        var saved = _repository!.CreateBoard(CreateTestBoard());
+        var originalId = saved.Id;
+        saved.Name = "Renamed";
+
+        // Act
+        _repository.UpdateBoard(saved);
+        var retrieved = _repository.GetBoardById(originalId);
+
+        // Assert
+        Assert.NotNull(retrieved);
+        Assert.Equal(originalId, retrieved!.Id);
+    }
+
+    [Fact]
+    public async Task UpdateBoard_DoesNotAffectOtherBoards() {
+        // Arrange
+        var saved1 = _repository!.CreateBoard(CreateTestBoard(3, 3));
+        var saved2 = _repository.CreateBoard(CreateTestBoard(5, 5));
+        saved1.Width = 99;
+
+        // Act
+        _repository.UpdateBoard(saved1);
+
+        // Assert
+        var retrieved2 = _repository.GetBoardById(saved2.Id);
+        Assert.NotNull(retrieved2);
+        Assert.Equal(5, retrieved2!.Width);
+    }
+
+    #endregion
+
     #region Delete Tests
 
     [Fact]
