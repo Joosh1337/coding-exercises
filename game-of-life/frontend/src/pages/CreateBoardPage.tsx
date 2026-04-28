@@ -4,10 +4,7 @@ import { BoardGrid } from "../components/BoardGrid";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { useCreateBoard } from "../hooks/useCreateBoard";
-
-function makeGrid(height: number, width: number): boolean[][] {
-  return Array.from({ length: height }, () => new Array(width).fill(false));
-}
+import { makeGrid } from "../utils/grid";
 
 export function CreateBoardPage() {
   const navigate = useNavigate();

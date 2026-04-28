@@ -5,24 +5,7 @@ import { ErrorMessage } from "../components/ErrorMessage";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { useBoard } from "../hooks/useBoard";
 import { useUpdateBoard } from "../hooks/useUpdateBoard";
-
-function makeGrid(height: number, width: number): boolean[][] {
-  return Array.from({ length: height }, () => new Array(width).fill(false));
-}
-
-function liveCellsToGrid(
-  width: number,
-  height: number,
-  liveCells: number[][]
-): boolean[][] {
-  const grid = makeGrid(height, width);
-  for (const [x, y] of liveCells) {
-    if (y >= 0 && y < height && x >= 0 && x < width) {
-      grid[y][x] = true;
-    }
-  }
-  return grid;
-}
+import { liveCellsToGrid, makeGrid } from "../utils/grid";
 
 export function EditBoardPage() {
   const { id } = useParams<{ id: string }>();

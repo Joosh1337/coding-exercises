@@ -7,7 +7,6 @@ import type { BoardResponse, BoardRepresentationResponse } from '../types/api';
 
 vi.mock('../hooks/useBoard');
 vi.mock('../hooks/useBoardStates');
-vi.mock('../api/client');
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
@@ -18,12 +17,10 @@ vi.mock('react-router-dom', async () => {
 
 import { useBoard } from '../hooks/useBoard';
 import { useFinalState, useStatesAhead } from '../hooks/useBoardStates';
-import * as clientModule from '../api/client';
 
 const mockUseBoard = vi.mocked(useBoard);
 const mockUseFinalState = vi.mocked(useFinalState);
 const mockUseStatesAhead = vi.mocked(useStatesAhead);
-const mockFetchStatesAhead = vi.mocked(clientModule.fetchStatesAhead);
 
 const sampleBoard: BoardResponse = {
   id: 'board-xyz',
@@ -44,6 +41,8 @@ const nextStateResponse: BoardRepresentationResponse = {
 
 const statesAheadMutation = {
   mutate: vi.fn(),
+  mutateAsync: vi.fn().mockResolvedValue(nextStateResponse),
+  reset: vi.fn(),
   isPending: false,
   isError: false,
   error: null,
@@ -93,7 +92,7 @@ describe('BoardSimulationPage', () => {
     mockUseBoard.mockReturnValue({ isLoading: false, isError: false, data: sampleBoard, error: null } as ReturnType<typeof useBoard>);
     renderPage();
     expect(screen.getByText('Test Board')).toBeInTheDocument();
-    expect(screen.getByText('0')).toBeInTheDocument(); // generation counter
+    expect(screen.getByText('0')).toBeInTheDocument();
   });
 
   it('shows "Unnamed board" for boards with no name', () => {
@@ -165,7 +164,6 @@ describe('BoardSimulationPage', () => {
 
   it('switches to Stop button when Play is clicked', async () => {
     mockUseBoard.mockReturnValue({ isLoading: false, isError: false, data: sampleBoard, error: null } as ReturnType<typeof useBoard>);
-    mockFetchStatesAhead.mockResolvedValue(nextStateResponse);
     renderPage();
     await userEvent.click(screen.getByRole('button', { name: /play/i }));
     expect(screen.getByRole('button', { name: /stop/i })).toBeInTheDocument();
@@ -173,7 +171,6 @@ describe('BoardSimulationPage', () => {
 
   it('stops playing when Stop is clicked', async () => {
     mockUseBoard.mockReturnValue({ isLoading: false, isError: false, data: sampleBoard, error: null } as ReturnType<typeof useBoard>);
-    mockFetchStatesAhead.mockResolvedValue(nextStateResponse);
     renderPage();
     await userEvent.click(screen.getByRole('button', { name: /play/i }));
     await userEvent.click(screen.getByRole('button', { name: /stop/i }));
@@ -199,7 +196,7 @@ describe('BoardSimulationPage', () => {
     mockUseBoard.mockReturnValue({ isLoading: false, isError: false, data: sampleBoard, error: null } as ReturnType<typeof useBoard>);
     renderPage();
     await userEvent.click(screen.getByRole('button', { name: /next/i }));
-    expect(screen.getByText('1')).toBeInTheDocument(); // generation 1
+    expect(screen.getByText('1')).toBeInTheDocument();
   });
 
   it('Jump button calls statesAhead with custom steps', async () => {
@@ -209,7 +206,7 @@ describe('BoardSimulationPage', () => {
     renderPage();
     await userEvent.click(screen.getByRole('button', { name: /jump/i }));
     expect(mutate).toHaveBeenCalledWith(
-      { id: 'board-xyz', steps: 1 }, // default jumpSteps is 1, generation is 0, so steps = 0+1=1
+      { id: 'board-xyz', steps: 1 },
       expect.any(Object)
     );
   });
@@ -219,15 +216,10 @@ describe('BoardSimulationPage', () => {
       onSuccess({ generation: 5, width: 3, height: 3, boardDisplay: [[0, 0, 0], [0, 0, 0], [0, 0, 0]] });
     });
     mockUseFinalState.mockReturnValue({ ...finalStateMutation, mutate: finalMutate } as ReturnType<typeof useFinalState>);
-    mockFetchStatesAhead.mockResolvedValue(nextStateResponse);
     mockUseBoard.mockReturnValue({ isLoading: false, isError: false, data: sampleBoard, error: null } as ReturnType<typeof useBoard>);
     renderPage();
-    // Reach final state
     await userEvent.click(screen.getByRole('button', { name: /end/i }));
-    // Now Restart should be visible
-    const restart = screen.getByRole('button', { name: /restart/i });
-    await userEvent.click(restart);
-    // After restart, Stop should appear (because it starts playing)
+    await userEvent.click(screen.getByRole('button', { name: /restart/i }));
     expect(screen.getByRole('button', { name: /stop/i })).toBeInTheDocument();
   });
 
@@ -272,24 +264,22 @@ describe('BoardSimulationPage', () => {
     expect(screen.getByText('0')).toBeInTheDocument();
   });
 
-  it('play loop calls fetchStatesAhead after the interval elapses', async () => {
+  it('play loop calls statesAhead.mutateAsync after the interval elapses', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: false });
-    mockFetchStatesAhead.mockResolvedValue(nextStateResponse);
+    const mutateAsync = vi.fn().mockResolvedValue(nextStateResponse);
+    mockUseStatesAhead.mockReturnValue({ ...statesAheadMutation, mutateAsync } as ReturnType<typeof useStatesAhead>);
     mockUseBoard.mockReturnValue({ isLoading: false, isError: false, data: sampleBoard, error: null } as ReturnType<typeof useBoard>);
     renderPage();
 
-    // Start playing
     await act(async () => {
       screen.getByRole('button', { name: /play/i }).click();
     });
 
-    // Advance the timer so the setTimeout fires
     await act(async () => {
       vi.advanceTimersByTime(600);
     });
 
     vi.useRealTimers();
-    // fetchStatesAhead should have been called by the play loop
-    expect(mockFetchStatesAhead).toHaveBeenCalledWith('board-xyz', 1);
+    expect(mutateAsync).toHaveBeenCalledWith({ id: 'board-xyz', steps: 1 });
   });
 });

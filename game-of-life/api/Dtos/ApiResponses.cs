@@ -79,7 +79,7 @@ public class BoardResponse {
     /// <summary>
     /// Optional user-defined name for the board.
     /// </summary>
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     /// Array of live cell coordinates [x, y].

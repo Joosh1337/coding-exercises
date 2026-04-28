@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { useBoard } from './useBoard';
 import { useBoards } from './useBoards';
-import { useNextState, useStatesAhead, useFinalState } from './useBoardStates';
+import { useStatesAhead, useFinalState } from './useBoardStates';
 import { useCreateBoard } from './useCreateBoard';
 import { useDeleteBoard } from './useDeleteBoard';
 import { useUpdateBoard } from './useUpdateBoard';
@@ -65,23 +65,6 @@ describe('useBoards', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual([sampleBoard]);
     expect(client.fetchBoards).toHaveBeenCalledWith(1, 10);
-  });
-});
-
-describe('useNextState', () => {
-  it('exposes a mutate function', () => {
-    const { result } = renderHook(() => useNextState(), { wrapper: makeWrapper() });
-    expect(typeof result.current.mutate).toBe('function');
-  });
-
-  it('calls fetchNextState when mutated', async () => {
-    vi.mocked(client.fetchNextState).mockResolvedValue(sampleState);
-    const { result } = renderHook(() => useNextState(), { wrapper: makeWrapper() });
-    await act(async () => {
-      result.current.mutate('b1');
-    });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(client.fetchNextState).toHaveBeenCalledWith('b1', expect.anything());
   });
 });
 

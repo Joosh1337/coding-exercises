@@ -64,7 +64,8 @@ public class GameOfLifeService : IGameOfLifeService {
             board.Height = height;
             board.LiveCells = cellCoordinates;
 
-            _boardRepository.UpdateBoard(board);
+            if (!_boardRepository.UpdateBoard(board))
+                throw new BoardNotFoundException(boardId);
         } catch (ArgumentException ex) {
             throw new InvalidBoardStateException(ex.Message);
         }

@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+
 interface BoardGridProps {
   display: number[][];
   editable?: boolean;
@@ -7,7 +9,10 @@ interface BoardGridProps {
 export function BoardGrid({ display, editable = false, onToggle }: BoardGridProps) {
   const rows = display.length;
   const cols = rows > 0 ? display[0].length : 0;
-  const cellSize = Math.max(6, Math.min(48, Math.floor(560 / Math.max(rows, cols, 1))));
+  const cellSize = useMemo(
+    () => Math.max(6, Math.min(48, Math.floor(560 / Math.max(rows, cols, 1)))),
+    [rows, cols]
+  );
 
   return (
     <div

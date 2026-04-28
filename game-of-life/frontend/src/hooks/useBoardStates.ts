@@ -1,9 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { fetchFinalState, fetchNextState, fetchStatesAhead } from "../api/client";
-
-export function useNextState() {
-  return useMutation({ mutationFn: fetchNextState });
-}
+import { fetchFinalState, fetchStatesAhead } from "../api/client";
 
 export function useStatesAhead() {
   return useMutation({

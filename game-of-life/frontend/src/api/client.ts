@@ -7,7 +7,7 @@ import type {
   ErrorResponse,
 } from "../types/api";
 
-const BASE_URL = "http://localhost:5141/api/boards";
+const BASE_URL = (import.meta.env.VITE_API_URL as string) ?? "http://localhost:5141/api/boards";
 
 async function handleResponse<T>(res: Response): Promise<T> {
   if (res.status === 204) return undefined as T;

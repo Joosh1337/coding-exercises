@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { fetchStatesAhead } from "../api/client";
 import { BoardGrid } from "../components/BoardGrid";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { useBoard } from "../hooks/useBoard";
 import { useFinalState, useStatesAhead } from "../hooks/useBoardStates";
+import { gridsEqual, liveCellsToDisplay } from "../utils/grid";
 
 const DEFAULT_PLAY_SPEED = 500;
 const MIN_PLAY_SPEED = 100;
@@ -14,30 +14,6 @@ const MAX_PLAY_SPEED = 1000;
 interface DisplayState {
   generation: number;
   boardDisplay: number[][];
-}
-
-function liveCellsToDisplay(
-  width: number,
-  height: number,
-  liveCells: number[][]
-): number[][] {
-  const grid = Array.from({ length: height }, () => new Array(width).fill(0));
-  for (const [x, y] of liveCells) {
-    if (y >= 0 && y < height && x >= 0 && x < width) {
-      grid[y][x] = 1;
-    }
-  }
-  return grid;
-}
-
-function gridsEqual(a: number[][], b: number[][]): boolean {
-  return (
-    a.length === b.length &&
-    a.every(
-      (row, y) =>
-        row.length === b[y].length && row.every((cell, x) => cell === b[y][x])
-    )
-  );
 }
 
 export function BoardSimulationPage() {
@@ -50,7 +26,6 @@ export function BoardSimulationPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [reachedFinalState, setReachedFinalState] = useState(false);
   const [playSpeed, setPlaySpeed] = useState(DEFAULT_PLAY_SPEED);
-  const [playError, setPlayError] = useState<string | null>(null);
 
   const statesAhead = useStatesAhead();
   const finalState = useFinalState();
@@ -77,7 +52,10 @@ export function BoardSimulationPage() {
 
     const timeout = setTimeout(async () => {
       try {
-        const data = await fetchStatesAhead(id!, current.generation + 1);
+        const data = await statesAhead.mutateAsync({
+          id: id!,
+          steps: current.generation + 1,
+        });
         const stable = gridsEqual(current.boardDisplay, data.boardDisplay);
         setHistory((h) => [
           ...h.slice(0, historyIndex + 1),
@@ -88,14 +66,13 @@ export function BoardSimulationPage() {
           setIsPlaying(false);
           setReachedFinalState(true);
         }
-      } catch (err) {
+      } catch {
         setIsPlaying(false);
-        setPlayError((err as Error).message);
       }
     }, playSpeed);
 
     return () => clearTimeout(timeout);
-  }, [isPlaying, historyIndex, history, id, playSpeed]);
+  }, [isPlaying, historyIndex, history, id, playSpeed, statesAhead.mutateAsync]);
 
   if (isLoading) {
     return (
@@ -186,7 +163,7 @@ export function BoardSimulationPage() {
   }
 
   function handlePlay() {
-    setPlayError(null);
+    statesAhead.reset();
     setReachedFinalState(false);
     setIsPlaying(true);
   }
@@ -196,7 +173,7 @@ export function BoardSimulationPage() {
   }
 
   function handleRestart() {
-    setPlayError(null);
+    statesAhead.reset();
     setReachedFinalState(false);
     setHistoryIndex(0);
     setIsPlaying(true);
@@ -339,7 +316,6 @@ export function BoardSimulationPage() {
 
         {/* Errors */}
         <div className="mt-4 flex flex-col gap-2">
-          {playError && <ErrorMessage message={playError} />}
           {statesAhead.isError && (
             <ErrorMessage message={(statesAhead.error as Error).message} />
           )}
