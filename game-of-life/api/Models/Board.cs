@@ -47,6 +47,11 @@ public class Board {
     public int Height { get; set; }
 
     /// <summary>
+    /// Optional user-defined name for the board.
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
     /// Live cells stored as a list of coordinates (serialization-friendly for LiteDB).
     /// Use BoardState for performance-critical operations that need fast lookups.
     /// </summary>

@@ -77,12 +77,18 @@ public class BoardResponse {
     public int Height { get; set; }
 
     /// <summary>
+    /// Optional user-defined name for the board.
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
     /// Array of live cell coordinates [x, y].
     /// </summary>
     public int[][] LiveCells { get; set; }
 
-    public BoardResponse(Guid id, int generation, int width, int height, int[][] liveCells) {
+    public BoardResponse(Guid id, string name, int generation, int width, int height, int[][] liveCells) {
         Id = id;
+        Name = name;
         Generation = generation;
         Width = width;
         Height = height;
@@ -99,6 +105,7 @@ public class BoardResponse {
 
         return new BoardResponse(
             boardState.Id,
+            boardState.Name,
             boardState.Generation,
             boardState.Width,
             boardState.Height,
@@ -168,6 +175,11 @@ public class BoardRepresentationResponse {
 /// </summary>
 public class CreateBoardDto {
     /// <summary>
+    /// Optional user-defined name for the board.
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
     /// The width of the board (must be > 0).
     /// </summary>
     [Range(1, int.MaxValue)]
@@ -181,6 +193,33 @@ public class CreateBoardDto {
 
     /// <summary>
     /// Array of live cell coordinates [x, y].
+    /// </summary>
+    public required int[][] InitialCells { get; set; }
+}
+
+/// <summary>
+/// Request DTO for updating an existing board.
+/// </summary>
+public class UpdateBoardDto {
+    /// <summary>
+    /// The updated name for the board (may be empty).
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The updated width of the board (must be > 0).
+    /// </summary>
+    [Range(1, int.MaxValue)]
+    public int Width { get; set; }
+
+    /// <summary>
+    /// The updated height of the board (must be > 0).
+    /// </summary>
+    [Range(1, int.MaxValue)]
+    public int Height { get; set; }
+
+    /// <summary>
+    /// Full 2D grid of live cells [y][x], where 1 = alive and 0 = dead.
     /// </summary>
     public required int[][] InitialCells { get; set; }
 }

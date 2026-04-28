@@ -35,6 +35,13 @@ public interface IBoardRepository {
     bool DeleteBoard(Guid id);
 
     /// <summary>
+    /// Updates an existing board in persistence.
+    /// </summary>
+    /// <param name="board">The board entity with updated values.</param>
+    /// <returns>True if the board was updated; false if it was not found.</returns>
+    bool UpdateBoard(Board board);
+
+    /// <summary>
     /// Checks whether a board exists in persistence.
     /// </summary>
     /// <param name="id">The board's Guid.</param>
