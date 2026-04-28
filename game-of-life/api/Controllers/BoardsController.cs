@@ -29,6 +29,9 @@ public class BoardsController : ControllerBase {
             if (request == null || request.InitialCells == null)
                 return BadRequest(new ErrorResponse(400, "Invalid request: LiveCells array is required."));
 
+            if (string.IsNullOrWhiteSpace(request.Name))
+                return BadRequest(new ErrorResponse(400, "Invalid request: Name is required."));
+
             var boardId = _gameOfLifeService.CreateBoard(request.Width, request.Height, request.InitialCells, request.Name);
 
             return Ok(new SuccessResponse<CreateBoardResponse>(
@@ -159,6 +162,9 @@ public class BoardsController : ControllerBase {
         try {
             if (request == null || request.InitialCells == null)
                 return BadRequest(new ErrorResponse(400, "Invalid request: InitialCells is required."));
+
+            if (string.IsNullOrWhiteSpace(request.Name))
+                return BadRequest(new ErrorResponse(400, "Invalid request: Name is required."));
 
             _gameOfLifeService.UpdateBoard(id, request.Name, request.Width, request.Height, request.InitialCells);
             return NoContent();

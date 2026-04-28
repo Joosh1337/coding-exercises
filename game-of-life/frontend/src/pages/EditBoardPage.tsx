@@ -96,9 +96,10 @@ export function EditBoardPage() {
             <span className="text-sm text-gray-400">Name</span>
             <input
               type="text"
+              required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Unnamed board"
+              placeholder="My board"
               className="w-72 px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-green-500"
             />
           </label>
@@ -146,7 +147,7 @@ export function EditBoardPage() {
           <div className="flex items-center gap-3">
             <button
               type="submit"
-              disabled={updateBoard.isPending}
+              disabled={updateBoard.isPending || !name.trim()}
               className="flex items-center justify-center gap-2 w-40 px-4 py-2 bg-green-700 hover:bg-green-600 disabled:opacity-50 rounded font-medium transition-colors"
             >
               {updateBoard.isPending && <LoadingSpinner />}

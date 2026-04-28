@@ -175,7 +175,7 @@ public class BoardRepresentationResponse {
 /// </summary>
 public class CreateBoardDto {
     /// <summary>
-    /// Optional user-defined name for the board.
+    /// Required non-empty name for the board.
     /// </summary>
     public string Name { get; set; } = string.Empty;
 
@@ -202,7 +202,7 @@ public class CreateBoardDto {
 /// </summary>
 public class UpdateBoardDto {
     /// <summary>
-    /// The updated name for the board (may be empty).
+    /// Required non-empty updated name for the board.
     /// </summary>
     public string Name { get; set; } = string.Empty;
 

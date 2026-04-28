@@ -32,6 +32,7 @@ public class BoardsControllerTests {
         // Arrange
         var boardId = Guid.NewGuid();
         var request = new CreateBoardDto {
+            Name = "Test Board",
             Width = 2,
             Height = 2,
             InitialCells = new[] { new[] { 0, 0 }, new[] { 1, 1 } }
@@ -96,9 +97,51 @@ public class BoardsControllerTests {
     }
 
     [Fact]
+    public void CreateBoard_WithEmptyName_ReturnsBadRequest() {
+        // Arrange
+        var request = new CreateBoardDto {
+            Name = "",
+            Width = 2,
+            Height = 2,
+            InitialCells = new[] { new[] { 0, 0 }, new[] { 0, 0 } }
+        };
+
+        // Act
+        var result = _controller.CreateBoard(request);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        var response = ((BadRequestObjectResult)result).Value as ErrorResponse;
+        response?.ErrorCode.Should().Be(400);
+        response?.Message.Should().Contain("Name is required");
+        _mockGameOfLifeService.Verify(s => s.CreateBoard(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int[][]>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public void CreateBoard_WithWhitespaceName_ReturnsBadRequest() {
+        // Arrange
+        var request = new CreateBoardDto {
+            Name = "   ",
+            Width = 2,
+            Height = 2,
+            InitialCells = new[] { new[] { 0, 0 }, new[] { 0, 0 } }
+        };
+
+        // Act
+        var result = _controller.CreateBoard(request);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        var response = ((BadRequestObjectResult)result).Value as ErrorResponse;
+        response?.ErrorCode.Should().Be(400);
+        response?.Message.Should().Contain("Name is required");
+    }
+
+    [Fact]
     public void CreateBoard_WhenServiceThrowsInvalidBoardStateException_ReturnsBadRequest() {
         // Arrange
         var request = new CreateBoardDto {
+            Name = "Test Board",
             Width = -1,
             Height = 1,
             InitialCells = new[] { new[] { 0, 0 } }
@@ -126,6 +169,7 @@ public class BoardsControllerTests {
     public void CreateBoard_WhenServiceThrowsGenericException_Returns500InternalServerError() {
         // Arrange
         var request = new CreateBoardDto {
+            Name = "Test Board",
             Width = 2,
             Height = 1,
             InitialCells = new[] { new[] { 0, 0 } }
@@ -153,6 +197,7 @@ public class BoardsControllerTests {
         // Arrange
         var boardId = Guid.NewGuid();
         var request = new CreateBoardDto {
+            Name = "Test Board",
             Width = 10,
             Height = 10,
             InitialCells = Array.Empty<int[]>()
@@ -593,6 +638,49 @@ public class BoardsControllerTests {
         var response = ((BadRequestObjectResult)result).Value as ErrorResponse;
         response?.ErrorCode.Should().Be(400);
         _mockGameOfLifeService.Verify(s => s.UpdateBoard(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int[][]>()), Times.Never);
+    }
+
+    [Fact]
+    public void UpdateBoard_WithEmptyName_ReturnsBadRequest() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        var request = new UpdateBoardDto {
+            Name = "",
+            Width = 2,
+            Height = 2,
+            InitialCells = new[] { new[] { 0, 0 }, new[] { 0, 0 } }
+        };
+
+        // Act
+        var result = _controller.UpdateBoard(boardId, request);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        var response = ((BadRequestObjectResult)result).Value as ErrorResponse;
+        response?.ErrorCode.Should().Be(400);
+        response?.Message.Should().Contain("Name is required");
+        _mockGameOfLifeService.Verify(s => s.UpdateBoard(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int[][]>()), Times.Never);
+    }
+
+    [Fact]
+    public void UpdateBoard_WithWhitespaceName_ReturnsBadRequest() {
+        // Arrange
+        var boardId = Guid.NewGuid();
+        var request = new UpdateBoardDto {
+            Name = "   ",
+            Width = 2,
+            Height = 2,
+            InitialCells = new[] { new[] { 0, 0 }, new[] { 0, 0 } }
+        };
+
+        // Act
+        var result = _controller.UpdateBoard(boardId, request);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        var response = ((BadRequestObjectResult)result).Value as ErrorResponse;
+        response?.ErrorCode.Should().Be(400);
+        response?.Message.Should().Contain("Name is required");
     }
 
     [Fact]
