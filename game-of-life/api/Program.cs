@@ -14,6 +14,7 @@ builder.Services.AddSwaggerGen();
 var allowedOrigins = builder.Configuration["Cors:AllowedOrigins"]
     ?.Split(',')
     .Select(o => o.Trim())
+    .Where(o => !string.IsNullOrWhiteSpace(o))
     .ToArray() ?? [];
 builder.Services.AddCors(options =>
 {

@@ -71,7 +71,7 @@ export function CreateBoardPage() {
                 min={1}
                 max={50}
                 value={width}
-                onChange={(e) => setWidth(Math.max(1, Math.min(50, Number(e.target.value))))}
+                onChange={(e) => { const v = e.currentTarget.valueAsNumber; if (!isNaN(v)) setWidth(Math.max(1, Math.min(50, v))); }}
                 className="w-24 px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-green-500"
               />
             </label>
@@ -82,7 +82,7 @@ export function CreateBoardPage() {
                 min={1}
                 max={50}
                 value={height}
-                onChange={(e) => setHeight(Math.max(1, Math.min(50, Number(e.target.value))))}
+                onChange={(e) => { const v = e.currentTarget.valueAsNumber; if (!isNaN(v)) setHeight(Math.max(1, Math.min(50, v))); }}
                 className="w-24 px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-green-500"
               />
             </label>

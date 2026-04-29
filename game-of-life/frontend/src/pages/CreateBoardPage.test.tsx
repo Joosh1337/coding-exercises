@@ -94,13 +94,15 @@ describe('CreateBoardPage', () => {
   });
 
   it('resets grid when dimensions change', async () => {
+    const mutate = vi.fn();
+    mockUseCreateBoard.mockReturnValue({ ...defaultMutation, mutate } as ReturnType<typeof useCreateBoard>);
     renderPage();
     const widthInput = screen.getAllByRole('spinbutton')[0];
-    await userEvent.clear(widthInput);
-    await userEvent.type(widthInput, '5');
-    const { container } = renderPage();
-    // Re-render and check grid resets
-    expect(container).toBeInTheDocument();
+    fireEvent.change(widthInput, { target: { value: '5', valueAsNumber: 5 } });
+    fireEvent.submit(screen.getByRole('button', { name: /create board/i }).closest('form')!);
+    const callArg = mutate.mock.calls[0][0];
+    expect(callArg.width).toBe(5);
+    expect(callArg.initialCells[0]).toHaveLength(5);
   });
 
   it('has a back link to /', () => {

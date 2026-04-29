@@ -7,13 +7,19 @@ import type {
   ErrorResponse,
 } from "../types/api";
 
-const BASE_URL = (import.meta.env.VITE_API_URL as string) ?? "http://localhost:5141/api/boards";
+const BASE_URL = (import.meta.env.VITE_API_URL as string) || "http://localhost:5141/api/boards";
 
 async function handleResponse<T>(res: Response): Promise<T> {
   if (res.status === 204) return undefined as T;
   if (!res.ok) {
-    const err: ErrorResponse = await res.json();
-    throw new Error(err.message);
+    let message = res.statusText || "Request failed";
+    try {
+      const err: ErrorResponse = await res.json();
+      message = err.message;
+    } catch {
+      // non-JSON error body; fall back to statusText
+    }
+    throw new Error(message);
   }
   const body: ApiResponse<T> = await res.json();
   return body.data;

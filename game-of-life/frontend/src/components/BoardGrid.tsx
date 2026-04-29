@@ -28,6 +28,15 @@ export function BoardGrid({ display, editable = false, onToggle }: BoardGridProp
         row.map((cell, x) => (
           <div
             key={`${y}-${x}`}
+            role={editable ? "button" : undefined}
+            tabIndex={editable ? 0 : undefined}
+            aria-label={editable ? `cell ${y},${x}` : undefined}
+            onKeyDown={editable ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onToggle?.(y, x);
+              }
+            } : undefined}
             style={{ width: cellSize, height: cellSize }}
             className={`${cell ? "bg-green-400" : "bg-gray-900"} ${
               editable ? "cursor-pointer hover:opacity-70" : ""
