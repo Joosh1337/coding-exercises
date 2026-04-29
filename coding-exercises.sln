@@ -8,6 +8,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "api.Tests", "game-of-life\a
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "api", "game-of-life\api\api.csproj", "{18562B35-E288-5A37-6DF6-C2FA94224E14}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "frontend", "game-of-life\frontend", "{B3C4D5E6-F7A8-9012-BCDE-F01234567890}"
+	ProjectSection(SolutionItems) = preProject
+		game-of-life\frontend\package.json = game-of-life\frontend\package.json
+		game-of-life\frontend\vite.config.ts = game-of-life\frontend\vite.config.ts
+		game-of-life\frontend\.env.example = game-of-life\frontend\.env.example
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,6 +36,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{AE65FAB5-3623-28F0-486D-F458DE422184} = {D416B5D6-7BDA-A2CA-5A83-76805197BB4F}
 		{18562B35-E288-5A37-6DF6-C2FA94224E14} = {D416B5D6-7BDA-A2CA-5A83-76805197BB4F}
+		{B3C4D5E6-F7A8-9012-BCDE-F01234567890} = {D416B5D6-7BDA-A2CA-5A83-76805197BB4F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AD46E628-CF6B-4E64-9B5D-2FEBE795CEAB}

@@ -5,6 +5,7 @@ import { ErrorMessage } from "../components/ErrorMessage";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { useBoard } from "../hooks/useBoard";
 import { useFinalState, useStatesAhead } from "../hooks/useBoardStates";
+import { getErrorMessage } from "../utils/error";
 import { gridsEqual, liveCellsToDisplay } from "../utils/grid";
 
 const DEFAULT_PLAY_SPEED = 500;
@@ -85,7 +86,7 @@ export function BoardSimulationPage() {
   if (isError || !board) {
     return (
       <div className="min-h-screen bg-gray-950 text-white p-8">
-        <ErrorMessage message={(error as Error)?.message ?? "Board not found."} />
+        <ErrorMessage message={getErrorMessage(error, "Board not found.")} />
         <Link to="/" className="mt-4 inline-block text-gray-400 hover:text-white text-sm">
           ← Back to boards
         </Link>
@@ -317,10 +318,10 @@ export function BoardSimulationPage() {
         {/* Errors */}
         <div className="mt-4 flex flex-col gap-2">
           {statesAhead.isError && (
-            <ErrorMessage message={(statesAhead.error as Error).message} />
+            <ErrorMessage message={getErrorMessage(statesAhead.error, "Failed to advance state.")} />
           )}
           {finalState.isError && (
-            <ErrorMessage message={(finalState.error as Error).message} />
+            <ErrorMessage message={getErrorMessage(finalState.error, "Failed to compute final state.")} />
           )}
         </div>
       </div>

@@ -4,6 +4,7 @@ import { BoardGrid } from "../components/BoardGrid";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { useCreateBoard } from "../hooks/useCreateBoard";
+import { getErrorMessage } from "../utils/error";
 import { makeGrid } from "../utils/grid";
 
 export function CreateBoardPage() {
@@ -94,7 +95,7 @@ export function CreateBoardPage() {
 
           {createBoard.isError && (
             <ErrorMessage
-              message={(createBoard.error as Error).message ?? "Failed to create board."}
+              message={getErrorMessage(createBoard.error, "Failed to create board.")}
             />
           )}
 

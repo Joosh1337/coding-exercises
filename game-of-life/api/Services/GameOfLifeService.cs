@@ -34,7 +34,7 @@ public class GameOfLifeService : IGameOfLifeService {
     /// <summary>
     /// Creates a new board with the specified dimensions and initial live cells.
     /// </summary>
-    public Guid CreateBoard(int width, int height, int[][] initialCells, string name = "") {
+    public Guid CreateBoard(int width, int height, int[][] initialCells, string name) {
         try {
             // Convert array format to CellCoordinate list
             var cellCoordinates = ConvertArrayToCellCoordinates(width, height, initialCells);

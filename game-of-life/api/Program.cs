@@ -11,13 +11,16 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var allowedOrigins = builder.Configuration["Cors:AllowedOrigins"]?.Split(',') ?? [];
+var allowedOrigins = builder.Configuration["Cors:AllowedOrigins"]
+    ?.Split(',')
+    .Select(o => o.Trim())
+    .ToArray() ?? [];
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
         policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
-              .AllowAnyMethod());
+              .WithMethods("GET", "POST", "PUT", "DELETE"));
 });
 
 // Configure LiteDB and repository

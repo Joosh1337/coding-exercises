@@ -12,10 +12,10 @@ public interface IGameOfLifeService {
     /// <param name="width">Board width (must be > 0)</param>
     /// <param name="height">Board height (must be > 0)</param>
     /// <param name="initialCells">2D array where non-zero values indicate live cells</param>
-    /// <param name="name">Optional user-defined name</param>
+    /// <param name="name">Board name (required, non-empty)</param>
     /// <returns>The ID of the created board</returns>
     /// <exception cref="InvalidBoardStateException">If dimensions are invalid or cells are out of bounds</exception>
-    Guid CreateBoard(int width, int height, int[][] initialCells, string name = "");
+    Guid CreateBoard(int width, int height, int[][] initialCells, string name);
 
     /// <summary>
     /// Updates an existing board's name, dimensions, and initial cell state.

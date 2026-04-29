@@ -27,7 +27,7 @@ export interface BoardRepresentationResponse {
 }
 
 export interface CreateBoardRequest {
-  name?: string;
+  name: string;
   width: number;
   height: number;
   initialCells: number[][];

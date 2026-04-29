@@ -6,6 +6,7 @@ import { LoadingSpinner } from "../components/LoadingSpinner";
 import { Pagination } from "../components/Pagination";
 import { useBoards } from "../hooks/useBoards";
 import { useDeleteBoard } from "../hooks/useDeleteBoard";
+import { getErrorMessage } from "../utils/error";
 
 const PAGE_SIZE = 10;
 
@@ -34,7 +35,7 @@ export function BoardListPage() {
         )}
 
         {isError && (
-          <ErrorMessage message={(error as Error).message ?? "Failed to load boards."} />
+          <ErrorMessage message={getErrorMessage(error, "Failed to load boards.")} />
         )}
 
         {data && data.length === 0 && (

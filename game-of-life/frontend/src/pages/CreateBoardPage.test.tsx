@@ -42,7 +42,7 @@ describe('CreateBoardPage', () => {
 
   it('renders name, width, height inputs', () => {
     renderPage();
-    expect(screen.getByPlaceholderText(/unnamed board/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/my board/i)).toBeInTheDocument();
     expect(screen.getAllByDisplayValue('10')).toHaveLength(2); // width and height both 10
   });
 

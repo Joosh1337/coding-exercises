@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { BoardGrid } from "../components/BoardGrid";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { useBoard } from "../hooks/useBoard";
 import { useUpdateBoard } from "../hooks/useUpdateBoard";
+import { getErrorMessage } from "../utils/error";
 import { liveCellsToGrid, makeGrid } from "../utils/grid";
 
 export function EditBoardPage() {
@@ -17,17 +18,17 @@ export function EditBoardPage() {
   const [width, setWidth] = useState(10);
   const [height, setHeight] = useState(10);
   const [grid, setGrid] = useState<boolean[][]>(() => makeGrid(10, 10));
-  const [initialized, setInitialized] = useState(false);
+  const initializedId = useRef<string | undefined>(undefined);
 
   useEffect(() => {
-    if (board && !initialized) {
-      setName(board.name ?? "");
+    if (board && initializedId.current !== board.id) {
+      initializedId.current = board.id;
+      setName(board.name);
       setWidth(board.width);
       setHeight(board.height);
       setGrid(liveCellsToGrid(board.width, board.height, board.liveCells));
-      setInitialized(true);
     }
-  }, [board, initialized]);
+  }, [board]);
 
   function handleWidthChange(newWidth: number) {
     setWidth(newWidth);
@@ -67,7 +68,7 @@ export function EditBoardPage() {
   if (isError || !board) {
     return (
       <div className="min-h-screen bg-gray-950 text-white p-8">
-        <ErrorMessage message={(error as Error)?.message ?? "Board not found."} />
+        <ErrorMessage message={getErrorMessage(error, "Board not found.")} />
         <Link to="/" className="mt-4 inline-block text-gray-400 hover:text-white text-sm">
           ← Back to boards
         </Link>
@@ -140,7 +141,7 @@ export function EditBoardPage() {
 
           {updateBoard.isError && (
             <ErrorMessage
-              message={(updateBoard.error as Error).message ?? "Failed to update board."}
+              message={getErrorMessage(updateBoard.error, "Failed to update board.")}
             />
           )}
 

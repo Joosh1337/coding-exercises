@@ -52,7 +52,7 @@ public class GameOfLifeServiceTests {
             });
 
         // Act
-        var result = _service.CreateBoard(width, height, initialCells);
+        var result = _service.CreateBoard(width, height, initialCells, "Test Board");
 
         // Assert
         result.Should().Be(expectedId);
@@ -67,7 +67,7 @@ public class GameOfLifeServiceTests {
 
         // Act & Assert
         Assert.Throws<InvalidBoardStateException>(() =>
-            _service.CreateBoard(width, height, initialCells));
+            _service.CreateBoard(width, height, initialCells, "Test Board"));
 
         _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
     }
@@ -80,7 +80,7 @@ public class GameOfLifeServiceTests {
 
         // Act & Assert
         Assert.Throws<InvalidBoardStateException>(() =>
-            _service.CreateBoard(width, height, initialCells));
+            _service.CreateBoard(width, height, initialCells, "Test Board"));
 
         _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
     }
@@ -97,7 +97,7 @@ public class GameOfLifeServiceTests {
 
         // Act & Assert
         Assert.Throws<InvalidBoardStateException>(() =>
-            _service.CreateBoard(width, height, initialCells));
+            _service.CreateBoard(width, height, initialCells, "Test Board"));
 
         _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
     }
@@ -113,7 +113,7 @@ public class GameOfLifeServiceTests {
 
         // Act & Assert
         Assert.Throws<InvalidBoardStateException>(() =>
-            _service.CreateBoard(width, height, initialCells));
+            _service.CreateBoard(width, height, initialCells, "Test Board"));
 
         _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
     }
@@ -128,7 +128,7 @@ public class GameOfLifeServiceTests {
 
         // Act & Assert
         Assert.Throws<InvalidBoardStateException>(() =>
-            _service.CreateBoard(width, height, initialCells));
+            _service.CreateBoard(width, height, initialCells, "Test Board"));
 
         _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
     }
@@ -144,7 +144,7 @@ public class GameOfLifeServiceTests {
 
         // Act & Assert
         Assert.Throws<InvalidBoardStateException>(() =>
-            _service.CreateBoard(width, height, initialCells));
+            _service.CreateBoard(width, height, initialCells, "Test Board"));
 
         _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
     }
@@ -157,7 +157,7 @@ public class GameOfLifeServiceTests {
 
         // Act & Assert
         Assert.Throws<InvalidBoardStateException>(() =>
-            _service.CreateBoard(width, height, initialCells));
+            _service.CreateBoard(width, height, initialCells, "Test Board"));
 
         _mockRepository.Verify(r => r.CreateBoard(It.IsAny<Board>()), Times.Never);
     }
@@ -601,7 +601,7 @@ public class GameOfLifeServiceTests {
             .Returns(true);
 
         // Act
-        var createdId = _service.CreateBoard(5, 5, initialCells);
+        var createdId = _service.CreateBoard(5, 5, initialCells, "Test Board");
         var initialState = _service.GetBoardState(createdId);
         var nextState = _service.GetStatesAhead(createdId, 1);
         var deleteResult = _service.DeleteBoard(createdId);
