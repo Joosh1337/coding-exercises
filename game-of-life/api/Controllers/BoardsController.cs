@@ -27,7 +27,7 @@ public class BoardsController : ControllerBase {
     public IActionResult CreateBoard([FromBody] CreateBoardDto request) {
         try {
             if (request == null || request.InitialCells == null)
-                return BadRequest(new ErrorResponse(400, "Invalid request: LiveCells array is required."));
+                return BadRequest(new ErrorResponse(400, "Invalid request: InitialCells array is required."));
 
             if (string.IsNullOrWhiteSpace(request.Name))
                 return BadRequest(new ErrorResponse(400, "Invalid request: Name is required."));
