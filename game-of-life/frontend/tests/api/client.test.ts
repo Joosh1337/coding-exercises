@@ -8,7 +8,7 @@ import {
   fetchStatesAhead,
   fetchFinalState,
   updateBoard,
-} from './client';
+} from '../../src/api/client';
 
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);

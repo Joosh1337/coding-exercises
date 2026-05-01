@@ -2,8 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { BoardCard } from './BoardCard';
-import type { BoardResponse } from '../types/api';
+import { BoardCard } from '../../src/components/BoardCard';
+import type { BoardResponse } from '../../src/types/api';
 
 const board: BoardResponse = {
   id: 'board-123',

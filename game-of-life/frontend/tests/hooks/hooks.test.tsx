@@ -2,15 +2,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import { useBoard } from './useBoard';
-import { useBoards } from './useBoards';
-import { useStatesAhead, useFinalState } from './useBoardStates';
-import { useCreateBoard } from './useCreateBoard';
-import { useDeleteBoard } from './useDeleteBoard';
-import { useUpdateBoard } from './useUpdateBoard';
+import { useBoard } from '../../src/hooks/useBoard';
+import { useBoards } from '../../src/hooks/useBoards';
+import { useStatesAhead, useFinalState } from '../../src/hooks/useBoardStates';
+import { useCreateBoard } from '../../src/hooks/useCreateBoard';
+import { useDeleteBoard } from '../../src/hooks/useDeleteBoard';
+import { useUpdateBoard } from '../../src/hooks/useUpdateBoard';
 
-vi.mock('../api/client');
-import * as client from '../api/client';
+vi.mock('../../src/api/client');
+import * as client from '../../src/api/client';
 
 function makeWrapper() {
   const queryClient = new QueryClient({

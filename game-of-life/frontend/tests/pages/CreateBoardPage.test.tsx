@@ -2,15 +2,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { CreateBoardPage } from './CreateBoardPage';
+import { CreateBoardPage } from '../../src/pages/CreateBoardPage';
 
-vi.mock('../hooks/useCreateBoard');
+vi.mock('../../src/hooks/useCreateBoard');
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return { ...actual, useNavigate: () => vi.fn() };
 });
 
-import { useCreateBoard } from '../hooks/useCreateBoard';
+import { useCreateBoard } from '../../src/hooks/useCreateBoard';
 
 const mockUseCreateBoard = vi.mocked(useCreateBoard);
 

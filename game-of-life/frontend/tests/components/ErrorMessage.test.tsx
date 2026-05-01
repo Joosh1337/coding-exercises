@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { ErrorMessage } from './ErrorMessage';
+import { ErrorMessage } from '../../src/components/ErrorMessage';
 
 describe('ErrorMessage', () => {
   it('renders the message text', () => {

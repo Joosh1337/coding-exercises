@@ -2,11 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, act, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { BoardSimulationPage } from './BoardSimulationPage';
-import type { BoardResponse, BoardRepresentationResponse } from '../types/api';
+import { BoardSimulationPage } from '../../src/pages/BoardSimulationPage';
+import type { BoardResponse, BoardRepresentationResponse } from '../../src/types/api';
 
-vi.mock('../hooks/useBoard');
-vi.mock('../hooks/useBoardStates');
+vi.mock('../../src/hooks/useBoard');
+vi.mock('../../src/hooks/useBoardStates');
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
@@ -15,8 +15,8 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-import { useBoard } from '../hooks/useBoard';
-import { useFinalState, useStatesAhead } from '../hooks/useBoardStates';
+import { useBoard } from '../../src/hooks/useBoard';
+import { useFinalState, useStatesAhead } from '../../src/hooks/useBoardStates';
 
 const mockUseBoard = vi.mocked(useBoard);
 const mockUseFinalState = vi.mocked(useFinalState);

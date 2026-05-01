@@ -2,14 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { BoardListPage } from './BoardListPage';
-import type { BoardResponse } from '../types/api';
+import { BoardListPage } from '../../src/pages/BoardListPage';
+import type { BoardResponse } from '../../src/types/api';
 
-vi.mock('../hooks/useBoards');
-vi.mock('../hooks/useDeleteBoard');
+vi.mock('../../src/hooks/useBoards');
+vi.mock('../../src/hooks/useDeleteBoard');
 
-import { useBoards } from '../hooks/useBoards';
-import { useDeleteBoard } from '../hooks/useDeleteBoard';
+import { useBoards } from '../../src/hooks/useBoards';
+import { useDeleteBoard } from '../../src/hooks/useDeleteBoard';
 
 const mockUseBoards = vi.mocked(useBoards);
 const mockUseDeleteBoard = vi.mocked(useDeleteBoard);
