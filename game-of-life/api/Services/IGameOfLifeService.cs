@@ -12,9 +12,22 @@ public interface IGameOfLifeService {
     /// <param name="width">Board width (must be > 0)</param>
     /// <param name="height">Board height (must be > 0)</param>
     /// <param name="initialCells">2D array where non-zero values indicate live cells</param>
+    /// <param name="name">Board name (required, non-empty)</param>
     /// <returns>The ID of the created board</returns>
     /// <exception cref="InvalidBoardStateException">If dimensions are invalid or cells are out of bounds</exception>
-    Guid CreateBoard(int width, int height, int[][] initialCells);
+    Guid CreateBoard(int width, int height, int[][] initialCells, string name);
+
+    /// <summary>
+    /// Updates an existing board's name, dimensions, and initial cell state.
+    /// </summary>
+    /// <param name="boardId">The ID of the board</param>
+    /// <param name="name">The new name for the board</param>
+    /// <param name="width">The new width (must be > 0)</param>
+    /// <param name="height">The new height (must be > 0)</param>
+    /// <param name="initialCells">2D array where non-zero values indicate live cells</param>
+    /// <exception cref="BoardNotFoundException">If the board is not found</exception>
+    /// <exception cref="InvalidBoardStateException">If dimensions are invalid or cells are out of bounds</exception>
+    void UpdateBoard(Guid boardId, string name, int width, int height, int[][] initialCells);
 
     /// <summary>
     /// Retrieves all initial board states within the paging parameters at generation 0.

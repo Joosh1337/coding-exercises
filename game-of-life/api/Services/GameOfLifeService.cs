@@ -34,19 +34,39 @@ public class GameOfLifeService : IGameOfLifeService {
     /// <summary>
     /// Creates a new board with the specified dimensions and initial live cells.
     /// </summary>
-    public Guid CreateBoard(int width, int height, int[][] initialCells) {
+    public Guid CreateBoard(int width, int height, int[][] initialCells, string name) {
         try {
             // Convert array format to CellCoordinate list
             var cellCoordinates = ConvertArrayToCellCoordinates(width, height, initialCells);
-            
+
             // Create board with validation
-            var board = new Board(width, height, cellCoordinates);
-            
+            var board = new Board(width, height, cellCoordinates) { Name = name };
+
             // Persist the board
             var createdBoard = _boardRepository.CreateBoard(board);
             return createdBoard.Id;
         } catch (ArgumentException ex) {
             // Convert ArgumentException to InvalidBoardStateException for consistent service contract
+            throw new InvalidBoardStateException(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Updates an existing board's name, dimensions, and initial cell state.
+    /// </summary>
+    public void UpdateBoard(Guid boardId, string name, int width, int height, int[][] initialCells) {
+        try {
+            var board = GetBoardOrThrow(boardId);
+            var cellCoordinates = ConvertArrayToCellCoordinates(width, height, initialCells);
+
+            board.Name = name;
+            board.Width = width;
+            board.Height = height;
+            board.LiveCells = cellCoordinates;
+
+            if (!_boardRepository.UpdateBoard(board))
+                throw new BoardNotFoundException(boardId);
+        } catch (ArgumentException ex) {
             throw new InvalidBoardStateException(ex.Message);
         }
     }

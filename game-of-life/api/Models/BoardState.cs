@@ -11,6 +11,11 @@ public class BoardState {
     public Guid Id { get; set; }
 
     /// <summary>
+    /// Optional user-defined name for the board.
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
     /// The generation number (0 for initial state).
     /// </summary>
     public int Generation { get; set; }
@@ -36,6 +41,7 @@ public class BoardState {
     /// </summary>
     public BoardState(Board board) {
         Id = board.Id;
+        Name = board.Name;
         Generation = 0;
         Width = board.Width;
         Height = board.Height;
@@ -97,6 +103,7 @@ public class BoardState {
 
         return new BoardState {
             Id = Id,
+            Name = Name,
             Generation = Generation + 1,
             Width = Width,
             Height = Height,

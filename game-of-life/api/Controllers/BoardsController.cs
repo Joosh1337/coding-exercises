@@ -27,9 +27,12 @@ public class BoardsController : ControllerBase {
     public IActionResult CreateBoard([FromBody] CreateBoardDto request) {
         try {
             if (request == null || request.InitialCells == null)
-                return BadRequest(new ErrorResponse(400, "Invalid request: LiveCells array is required."));
+                return BadRequest(new ErrorResponse(400, "Invalid request: InitialCells array is required."));
 
-            var boardId = _gameOfLifeService.CreateBoard(request.Width, request.Height, request.InitialCells);
+            if (string.IsNullOrWhiteSpace(request.Name))
+                return BadRequest(new ErrorResponse(400, "Invalid request: Name is required."));
+
+            var boardId = _gameOfLifeService.CreateBoard(request.Width, request.Height, request.InitialCells, request.Name);
 
             return Ok(new SuccessResponse<CreateBoardResponse>(
                 new CreateBoardResponse(boardId),
@@ -148,6 +151,29 @@ public class BoardsController : ControllerBase {
         } catch (NoFinalStateException ex) {
             _logger.LogWarning("No final state found within max iterations: {MaxIterations}", ex.MaxIterations);
             return StatusCode(422, new ErrorResponse(422, ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Updates an existing board's name, dimensions, and initial cell state.
+    /// </summary>
+    [HttpPut("{id}")]
+    public IActionResult UpdateBoard(Guid id, [FromBody] UpdateBoardDto request) {
+        try {
+            if (request == null || request.InitialCells == null)
+                return BadRequest(new ErrorResponse(400, "Invalid request: InitialCells is required."));
+
+            if (string.IsNullOrWhiteSpace(request.Name))
+                return BadRequest(new ErrorResponse(400, "Invalid request: Name is required."));
+
+            _gameOfLifeService.UpdateBoard(id, request.Name, request.Width, request.Height, request.InitialCells);
+            return NoContent();
+        } catch (BoardNotFoundException ex) {
+            _logger.LogWarning("Board not found: {BoardId}", ex.BoardId);
+            return NotFound(new ErrorResponse(404, ex.Message));
+        } catch (InvalidBoardStateException ex) {
+            _logger.LogWarning("Invalid board state: {Message}", ex.Message);
+            return BadRequest(new ErrorResponse(400, ex.Message));
         }
     }
 
